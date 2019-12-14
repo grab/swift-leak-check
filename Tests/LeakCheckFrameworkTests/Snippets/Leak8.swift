@@ -13,11 +13,6 @@ class X {
       tableView.rx.observe(CGSize.self, contentSizeText).unwrap() // No Leak
         .subscribe(onNext: { [weak self] size in // Leak
           guard let `self` = self else { return } // No Leak
-          self.tableView.snp.remakeConstraints { make in // No Leak
-            make.left.right.equalToSuperview()
-            make.top.equalTo(self.navigationView.snp.bottom)
-            make.height.equalTo(size.height)
-          }
       })
     }
     

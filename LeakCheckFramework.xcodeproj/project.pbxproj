@@ -32,6 +32,16 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		FCBAF01123A4A45D008C0C21 /* Animation.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_37 /* Animation.swift */; };
+		FCBAF01223A4A45D008C0C21 /* Leak1.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* Leak1.swift */; };
+		FCBAF01323A4A45D008C0C21 /* Leak2.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Leak2.swift */; };
+		FCBAF01423A4A45D008C0C21 /* Leak3.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* Leak3.swift */; };
+		FCBAF01523A4A45D008C0C21 /* Leak4.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_41 /* Leak4.swift */; };
+		FCBAF01623A4A45D008C0C21 /* Leak5.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* Leak5.swift */; };
+		FCBAF01723A4A45D008C0C21 /* Leak6.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* Leak6.swift */; };
+		FCBAF01823A4A45D008C0C21 /* Leak7.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_44 /* Leak7.swift */; };
+		FCBAF01923A4A45D008C0C21 /* Leak8.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Leak8.swift */; };
+		FCBAF01A23A4A45D008C0C21 /* Leak9.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* Leak9.swift */; };
 		OBJ_193 /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_113 /* api.c */; };
 		OBJ_194 /* emitter.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_114 /* emitter.c */; };
 		OBJ_195 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_115 /* parser.c */; };
@@ -516,16 +526,16 @@
 		OBJ_30 /* Variable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Variable.swift; sourceTree = "<group>"; };
 		OBJ_32 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		OBJ_35 /* LeakDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeakDetectorTests.swift; sourceTree = "<group>"; };
-		OBJ_37 /* Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animation.swift; sourceTree = "<group>"; };
-		OBJ_38 /* Leak1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak1.swift; sourceTree = "<group>"; };
-		OBJ_39 /* Leak2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak2.swift; sourceTree = "<group>"; };
-		OBJ_40 /* Leak3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak3.swift; sourceTree = "<group>"; };
-		OBJ_41 /* Leak4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak4.swift; sourceTree = "<group>"; };
-		OBJ_42 /* Leak5.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak5.swift; sourceTree = "<group>"; };
-		OBJ_43 /* Leak6.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak6.swift; sourceTree = "<group>"; };
-		OBJ_44 /* Leak7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak7.swift; sourceTree = "<group>"; };
-		OBJ_45 /* Leak8.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak8.swift; sourceTree = "<group>"; };
-		OBJ_46 /* Leak9.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leak9.swift; sourceTree = "<group>"; };
+		OBJ_37 /* Animation.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Animation.swift; sourceTree = "<group>"; };
+		OBJ_38 /* Leak1.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak1.swift; sourceTree = "<group>"; };
+		OBJ_39 /* Leak2.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak2.swift; sourceTree = "<group>"; };
+		OBJ_40 /* Leak3.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak3.swift; sourceTree = "<group>"; };
+		OBJ_41 /* Leak4.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak4.swift; sourceTree = "<group>"; };
+		OBJ_42 /* Leak5.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak5.swift; sourceTree = "<group>"; };
+		OBJ_43 /* Leak6.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak6.swift; sourceTree = "<group>"; };
+		OBJ_44 /* Leak7.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak7.swift; sourceTree = "<group>"; };
+		OBJ_45 /* Leak8.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak8.swift; sourceTree = "<group>"; };
+		OBJ_46 /* Leak9.swift */ = {isa = PBXFileReference; explicitFileType = text; path = Leak9.swift; sourceTree = "<group>"; };
 		OBJ_47 /* StackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackTests.swift; sourceTree = "<group>"; };
 		OBJ_51 /* Clang_C.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Clang_C.m; sourceTree = "<group>"; };
 		OBJ_53 /* Index.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Index.h; sourceTree = "<group>"; };
@@ -1135,6 +1145,7 @@
 			buildPhases = (
 				OBJ_280 /* Sources */,
 				OBJ_293 /* Frameworks */,
+				FCBAF01023A4A452008C0C21 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -1410,6 +1421,26 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FCBAF01023A4A452008C0C21 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCBAF01123A4A45D008C0C21 /* Animation.swift in Resources */,
+				FCBAF01223A4A45D008C0C21 /* Leak1.swift in Resources */,
+				FCBAF01323A4A45D008C0C21 /* Leak2.swift in Resources */,
+				FCBAF01423A4A45D008C0C21 /* Leak3.swift in Resources */,
+				FCBAF01523A4A45D008C0C21 /* Leak4.swift in Resources */,
+				FCBAF01623A4A45D008C0C21 /* Leak5.swift in Resources */,
+				FCBAF01723A4A45D008C0C21 /* Leak6.swift in Resources */,
+				FCBAF01823A4A45D008C0C21 /* Leak7.swift in Resources */,
+				FCBAF01923A4A45D008C0C21 /* Leak8.swift in Resources */,
+				FCBAF01A23A4A45D008C0C21 /* Leak9.swift in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		OBJ_192 /* Sources */ = {
