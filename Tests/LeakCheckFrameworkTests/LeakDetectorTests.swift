@@ -92,13 +92,12 @@ final class LeakDetectorTests: XCTestCase {
     }
     
     do {
-      let leakDetector = GraphLeakDetector(nonEscapeRules: { graph in
-        return [
+      let leakDetector = GraphLeakDetector(nonEscapeRules: [
           AnimationRule(),
           DispatchQueueRule(),
           FPOperatorsRule()
         ]
-      })
+      )
       let leaks = try leakDetector.detect(content: content)
       let leakAtLines = leaks.map { $0.line }
       let leakAtLinesUnique = NSOrderedSet(array: leakAtLines).array as! [Int]

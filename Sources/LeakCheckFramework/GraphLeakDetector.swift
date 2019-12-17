@@ -9,16 +9,16 @@ import SwiftSyntax
 
 public final class GraphLeakDetector: BaseSyntaxTreeLeakDetector {
   
-  public let nonEscapeRules: ((Graph) -> [NonEscapeRule])?
+  public let nonEscapeRules: [NonEscapeRule]
   
-  public init(nonEscapeRules: ((Graph) -> [NonEscapeRule])? = nil) {
+  public init(nonEscapeRules: [NonEscapeRule] = []) {
     self.nonEscapeRules = nonEscapeRules
   }
   
   override public func detect(_ sourceFileNode: SourceFileSyntax) -> [Leak] {
     var res: [Leak] = []
     let graph = GraphBuilder.buildGraph(node: sourceFileNode)
-    let visitor = LeakSyntaxVisitor(graph: graph, nonEscapeRules: nonEscapeRules?(graph) ?? []) { leak in
+    let visitor = LeakSyntaxVisitor(graph: graph, nonEscapeRules: nonEscapeRules) { leak in
         res.append(leak)
       }
     sourceFileNode.walk(visitor)

@@ -23,13 +23,12 @@ do {
   let dirScanner = DirectoryScanner(callback: { fileUrl, shouldStop in
     do {
       print("Scan \(fileUrl)")
-      let leakDetector = GraphLeakDetector(nonEscapeRules: { graph in
-        return [
+      let leakDetector = GraphLeakDetector(nonEscapeRules: [
           AnimationRule(),
           DispatchQueueRule(),
           FPOperatorsRule()
         ]
-      })
+      )
       
       let leaks = try leakDetector.detect(fileUrl)
       
