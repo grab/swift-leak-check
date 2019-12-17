@@ -5,7 +5,6 @@
 //  Created by Hoang Le Pham on 28/10/2019.
 //
 
-// https://gitlab.myteksi.net/mobile/dax-ios/driver-ios/merge_requests/6827
 class X {
   init(client: SafetyTelemetryHttpClient,
        dataStore: SafetyTelemetryDataStore,
@@ -15,16 +14,8 @@ class X {
     safetyAlertProcessor = alertProcessor
     
     safetyAlertProcessor.shouldSendAcceleratingTelemetry.map { self.mapAlert($0) } // Leak
-      .filter { !$0.isEmpty }
       .subscribe(weak: self, onNext: { strongSelf, value in
         strongSelf.sendAcceleratingTelemetry(acceleration: value)
-      }, onError: nil, onCompleted: nil, onDisposed: nil)
-      .disposed(by: disposeBag)
-    
-    safetyAlertProcessor.shouldSendSpeedingTelemetry.map { self.mapAlert($0) } // Leak
-      .filter { !$0.isEmpty }
-      .subscribe(weak: self, onNext: { strongSelf, value in
-        strongSelf.sendSpeedingTelemetry(speed: value)
       }, onError: nil, onCompleted: nil, onDisposed: nil)
       .disposed(by: disposeBag)
   }

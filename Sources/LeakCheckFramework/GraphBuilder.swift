@@ -43,7 +43,7 @@ class BaseGraphVistor: SyntaxVisitor {
   }
 }
 
-// TODO (Le):
+// TODO:
 // 1. Add variables in `if case let .someCase(a, b, c) {`
 fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   fileprivate var sourceFileScope: SourceFileScope!

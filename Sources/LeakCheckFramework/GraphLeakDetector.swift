@@ -57,7 +57,7 @@ private final class LeakSyntaxVisitor: BaseGraphVistor {
     var currentScope = graph.getClosetScopeThatCanResolve(node)
     var isEscape = false
     while true {
-      if let variable = currentScope.resolveVariable(node) {
+      if let variable = currentScope.findVariable(node) {
         if !isEscape {
           // No leak
           return

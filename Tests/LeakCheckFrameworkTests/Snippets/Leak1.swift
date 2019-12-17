@@ -17,7 +17,13 @@ class AClass {
         let _ = strongSelf // Leak
       }
     }
+
     b.doSmth(completion: block)
+
+    let nonEscapeBlock = {
+      // self.x += 1 // TODO
+    }
+    b.doNonEscapeBlock(nonEscapeBlock)
   }
 }
 
@@ -25,6 +31,9 @@ class BClass {
   var completion: (() -> Void)?
   func doSmth(completion: @escaping () -> Void) {
     self.completion = completion
+  }
+  func doNonEscapeBlock(_ block: () -> Void) {
+    block()
   }
 }
 

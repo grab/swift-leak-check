@@ -42,6 +42,8 @@
 		FCBAF01823A4A45D008C0C21 /* Leak7.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_44 /* Leak7.swift */; };
 		FCBAF01923A4A45D008C0C21 /* Leak8.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Leak8.swift */; };
 		FCBAF01A23A4A45D008C0C21 /* Leak9.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* Leak9.swift */; };
+		FCBAF0D223A62282008C0C21 /* FunctionSignature.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBAF0D123A62282008C0C21 /* FunctionSignature.swift */; };
+		FCBAF0D423A878B1008C0C21 /* TypePath.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBAF0D323A878B1008C0C21 /* TypePath.swift */; };
 		OBJ_193 /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_113 /* api.c */; };
 		OBJ_194 /* emitter.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_114 /* emitter.c */; };
 		OBJ_195 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_115 /* parser.c */; };
@@ -437,6 +439,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FCBAF0D123A62282008C0C21 /* FunctionSignature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionSignature.swift; sourceTree = "<group>"; };
+		FCBAF0D323A878B1008C0C21 /* TypePath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypePath.swift; sourceTree = "<group>"; };
 		"LeakCheckFramework::LeakCheckFramework::Product" /* LeakCheckFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LeakCheckFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"LeakCheckFramework::LeakCheckFrameworkTests::Product" /* LeakCheckFrameworkTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = LeakCheckFrameworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"LeakCheckFramework::Sample::Product" /* Sample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Sample; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -938,7 +942,7 @@
 			name = "SourceKitten 0.27.0";
 			sourceTree = SOURCE_ROOT;
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -948,7 +952,6 @@
 				OBJ_176 /* Products */,
 				OBJ_187 /* DerivedData */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_50 /* Clang_C */ = {
@@ -1060,6 +1063,7 @@
 				OBJ_9 /* BaseSyntaxTreeLeakDetector.swift */,
 				OBJ_10 /* DirectoryScanner.swift */,
 				OBJ_11 /* Function.swift */,
+				FCBAF0D123A62282008C0C21 /* FunctionSignature.swift */,
 				OBJ_12 /* Graph.swift */,
 				OBJ_13 /* GraphBuilder.swift */,
 				OBJ_14 /* GraphLeakDetector.swift */,
@@ -1070,6 +1074,7 @@
 				OBJ_26 /* Stack.swift */,
 				OBJ_27 /* SwiftSyntax+Extensions.swift */,
 				OBJ_28 /* SyntaxRetrieval.swift */,
+				FCBAF0D323A878B1008C0C21 /* TypePath.swift */,
 				OBJ_29 /* Utility.swift */,
 				OBJ_30 /* Variable.swift */,
 			);
@@ -1396,7 +1401,7 @@
 				English,
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_176 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1471,6 +1476,7 @@
 				OBJ_224 /* BaseSyntaxTreeLeakDetector.swift in Sources */,
 				OBJ_225 /* DirectoryScanner.swift in Sources */,
 				OBJ_226 /* Function.swift in Sources */,
+				FCBAF0D423A878B1008C0C21 /* TypePath.swift in Sources */,
 				OBJ_227 /* Graph.swift in Sources */,
 				OBJ_228 /* GraphBuilder.swift in Sources */,
 				OBJ_229 /* GraphLeakDetector.swift in Sources */,
@@ -1482,6 +1488,7 @@
 				OBJ_235 /* FPOperatorsRule.swift in Sources */,
 				OBJ_236 /* NonEscapeRule.swift in Sources */,
 				OBJ_239 /* Scope.swift in Sources */,
+				FCBAF0D223A62282008C0C21 /* FunctionSignature.swift in Sources */,
 				OBJ_240 /* Stack.swift in Sources */,
 				OBJ_241 /* SwiftSyntax+Extensions.swift in Sources */,
 				OBJ_242 /* SyntaxRetrieval.swift in Sources */,

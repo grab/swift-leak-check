@@ -16,39 +16,27 @@ public indirect enum TypeInfo {
 }
 
 indirect enum TypeResolve {
-  case unknown
-  case sequence(elementType: TypeResolve)
-  case dict // TODO (Le): key/value type
   case optional(base: TypeResolve)
-  case exact(TypeSyntax)
-  
-  var isCollection: Bool {
-    switch self {
-    case .unknown:
-      return false
-    case .sequence,
-         .dict:
-      return true
-    case .optional(let base):
-      return base.isCollection
-    case .exact(let type):
-      return type.isCollection
-    }
-  }
+  case sequence(elementType: TypeResolve)
+  case dict
+  case tuple(TupleTypeSyntax)
+  case name([String])
+  case unknown
   
   var isOptional: Bool {
     switch self {
-    case .unknown,
-         .sequence,
-         .dict:
-      return false
     case .optional:
       return true
-    case .exact(let type):
-      return type is OptionalTypeSyntax
+    case .sequence,
+         .dict,
+         .tuple,
+         .name,
+         .unknown:
+      return false
     }
   }
-  fileprivate var nilIfUnknown: TypeResolve? {
+  
+  fileprivate var toNilIfUnknown: TypeResolve? {
     switch self {
     case .unknown: return nil
     default: return self
@@ -57,13 +45,13 @@ indirect enum TypeResolve {
   
   var sequenceElementType: TypeResolve {
     switch self {
-    case .sequence(let elementType):
-      return elementType
     case .optional(let base):
       return base.sequenceElementType
-    case .exact(let type):
-      return type.sequenceElementType.flatMap { .exact($0) } ?? .unknown
+    case .sequence(let elementType):
+      return elementType
     case .dict,
+         .tuple,
+         .name,
          .unknown:
       return .unknown
     }
@@ -71,48 +59,39 @@ indirect enum TypeResolve {
   
   var tupleType: TupleTypeSyntax? {
     switch self {
-    case .dict,
-         .sequence,
-         .unknown:
-      return nil
-    case .exact(let type):
-      return type.tupleType
     case .optional(let base):
       return base.tupleType
-    }
-  }
-  
-  var simpleIdentifierType: SimpleTypeIdentifierSyntax? {
-    switch self {
-    case .dict, .sequence, .unknown:
+    case .tuple(let type):
+      return type
+    case .dict,
+         .sequence,
+         .name,
+         .unknown:
       return nil
-    case .optional(let base):
-      return base.simpleIdentifierType
-    case .exact(let type):
-      return type as? SimpleTypeIdentifierSyntax
     }
   }
 }
 
 public final class Graph {
-  enum ReferenceResolve {
-    case notFound
+  enum SymbolResolve {
     case variable(Variable)
+    case function(Function)
+    case typeDeclOrExtension(Scope)
     
     var variable: Variable? {
       switch self {
-      case .notFound: return nil
       case .variable(let variable): return variable
+      default:
+        return nil
       }
     }
   }
   
-  private var cachedReferenceResolved = [IdentifierExprSyntax: ReferenceResolve]()
+  private var cachedSymbolResolved = [IdentifierExprSyntax: SymbolResolve]()
   private var cachedVariableReferences = [Variable: [IdentifierExprSyntax]]()
   private var cachedVariableType = [Variable: TypeResolve]()
   private var cachedClosureEscapeCheck = [ClosureExprSyntax: Bool]()
-  private var cachedScopeTypePath = [Scope: String]()
-  private var cachedSameTypePathScope = [Scope: Set<Scope>]()
+  private var cachedScopeWithExtenionsMapping = [String: Set<Scope>]()
   
   private let sourceFileScope: SourceFileScope
   init(sourceFileScope: SourceFileScope) {
@@ -122,22 +101,22 @@ public final class Graph {
 
 // MARK: - Scope
 public extension Graph {
-  func getScope(_ node: Syntax) -> Scope {
-    guard let scope = sourceFileScope.getScope(node) else {
+  func scopeForNode(_ node: Syntax) -> Scope {
+    guard let scope = sourceFileScope.findScope(node) else {
       fatalError(logCantFindScopeForNode(node))
     }
     return scope
   }
   
-  func getEnclosingScope(_ node: Syntax) -> Scope {
-    guard let scope = sourceFileScope.getEnclosingScope(node) else {
+  func enclosingScopeForNode(_ node: Syntax) -> Scope {
+    guard let scope = sourceFileScope.findEnclosingScope(node) else {
       fatalError(logCantFindScopeForNode(node))
     }
     return scope
   }
   
   func getClosetScopeThatCanResolve(_ node: IdentifierExprSyntax) -> Scope {
-    var scope = getEnclosingScope(node)
+    var scope = enclosingScopeForNode(node)
     // Special case when node is a closure capture item, ie `{ [weak self] in`
     // We need to examine node wrt closure's parent
     if node.parent is ClosureCaptureItemSyntax {
@@ -145,73 +124,63 @@ public extension Graph {
         scope = parentScope
       } else {
         fatalError("Can't happen")
-        // return
       }
     }
     
     return scope
   }
   
-  // Scopes that are on different branches of the tree could be of same type due to `extension`
-  private func getScopesTogetherWithAllExtensions(_ scope: Scope) -> Set<Scope> {
-    if let group = cachedSameTypePathScope[scope] {
-      return group
+  // Scopes that are on different branches of the tree could be of same type due to Swift `extension`
+  private func _getScopeWithAllExtensions(_ scope: Scope) -> Set<Scope> {
+    guard let typePath = _getFullTypePathForScope(scope) else {
+      return Set([scope])
     }
     
-    let result: Set<Scope> = {
-      guard let typePath = getFullTypePathForScope(scope) else {
-        return Set([scope])
-      }
-      
-      // BFS
-      var result = Set<Scope>()
-      var q: [Scope] = [sourceFileScope]
-      while !q.isEmpty {
-        let element = q.remove(at: 0)
-        if getFullTypePathForScope(element) == typePath {
-          result.insert(element)
-        }
-        element.childScopes.forEach { q.append($0) }
-      }
-      
+    let name = typePath.map { $0.text }.joined(separator: ".")
+    
+    if let result = cachedScopeWithExtenionsMapping[name] {
       return result
-    }()
-    
-    for scope in result {
-      cachedSameTypePathScope[scope] = result
     }
-    return result
+    
+    sourceFileScope.childScopes.forEach { scope in
+      if let typePath = _getFullTypePathForScope(scope) {
+        let name = typePath.map { $0.text }.joined(separator: ".")
+        var set = cachedScopeWithExtenionsMapping[name] ?? Set()
+        set.insert(scope)
+        cachedScopeWithExtenionsMapping[name] = set
+      }
+    }
+    
+    return cachedScopeWithExtenionsMapping[name] ?? Set([scope])
   }
   
-  // For eg, A.B.C, here A,B,C can be class, struct, enum, ...
-  private func getFullTypePathForScope(_ scope: Scope) -> String? {
-    if let typePath = cachedScopeTypePath[scope] {
-      return typePath
-    }
-    
-    let parentTypePath: String
-      
+  // For eg, type path for C in be example below is A.B.C
+  // class A {
+  //   struct B {
+  //     enum C {
+  private func _getFullTypePathForScope(_ scope: Scope) -> [TokenSyntax]? {
+    let parentTypePath: [TokenSyntax]
     if scope.parent == nil {
-      parentTypePath = ""
-    } else if let path = getFullTypePathForScope(scope.parent!) {
-      parentTypePath = path
+      parentTypePath = []
+    } else if let typePath = _getFullTypePathForScope(scope.parent!) {
+      parentTypePath = typePath
     } else {
       return nil
     }
     
-    let typePath: String? = {
+    let typePath: [TokenSyntax]? = {
       switch scope.scopeNode {
       case .sourceFileNode:
-        return "sourceFile"
+        return []
       case .classNode(let classNode):
-        return ([parentTypePath, classNode.identifier.text]).joined(separator: ".")
+        return parentTypePath + [classNode.identifier]
       case .structNode(let structNode):
-        return ([parentTypePath, structNode.identifier.text]).joined(separator: ".")
+        return parentTypePath + [structNode.identifier]
       case .enumNode(let enumNode):
-        return ([parentTypePath, enumNode.identifier.text]).joined(separator: ".")
+        return parentTypePath + [enumNode.identifier]
       case .extensionNode(let extensionNode):
-        assert(parentTypePath == "sourceFile")
-        return ([parentTypePath] + extensionNode.extendedType.typePath.map { $0.text }).joined(separator: ".")
+        assert(parentTypePath.isEmpty)
+        return extensionNode.extendedType.tokens
       case .funcNode,
            .enumCaseNode,
            .initialiseNode,
@@ -227,8 +196,78 @@ public extension Graph {
         return nil
       }
     }()
-    cachedScopeTypePath[scope] = typePath
     return typePath
+  }
+}
+
+extension Graph {
+  enum ResolveSymbolOption: Equatable, CaseIterable {
+    case function
+    case variable
+    case type
+  }
+  
+  func resolveSymbol(_ node: IdentifierExprSyntax,
+                     startingFromScope scope: Scope? = nil,
+                     options: [ResolveSymbolOption] = ResolveSymbolOption.allCases,
+                     onResult: (SymbolResolve) -> Bool) -> SymbolResolve? {
+    var scope: Scope! = scope ?? getClosetScopeThatCanResolve(node)
+    while scope != nil {
+      if let result = resolveSymbol(node, inScope: scope, options: options, onResult: onResult) {
+        return result
+      }
+      scope = scope?.parent
+    }
+    
+    return nil
+  }
+  
+  func resolveSymbol(_ node: IdentifierExprSyntax,
+                     inScope scope: Scope,
+                     options: [ResolveSymbolOption] = ResolveSymbolOption.allCases,
+                     onResult: (SymbolResolve) -> Bool) -> SymbolResolve? {
+    if let result = cachedSymbolResolved[node] {
+      _ = onResult(result)
+      return result
+    }
+    
+    let group = _getScopeWithAllExtensions(scope)
+    for scope in group {
+      if options.contains(.variable) {
+        if let variable = scope.findVariable(node) {
+          let result: SymbolResolve = .variable(variable)
+          if onResult(result) {
+            cachedSymbolResolved[node] = result
+            cachedVariableReferences[variable] = (cachedVariableReferences[variable] ?? []) + [node]
+            return result
+          }
+        }
+      }
+      
+      if options.contains(.function) {
+        let functions = scope.findFunction(reference: node)
+        for function in functions {
+          let result: SymbolResolve = .function(function)
+          if onResult(result) {
+            cachedSymbolResolved[node] = result
+            return result
+          }
+        }
+      }
+      
+      if options.contains(.type) {
+        let typeScopes = scope.findTypeDeclOrExtension(name: node.identifier.text)
+        for scope in typeScopes {
+          let result: SymbolResolve = .typeDeclOrExtension(scope)
+          if onResult(result) {
+            cachedSymbolResolved[node] = result
+            return result
+          }
+        }
+      }
+    }
+    
+    return nil
   }
 }
 
@@ -237,31 +276,19 @@ extension Graph {
   
   @discardableResult
   func resolveVariable(_ node: IdentifierExprSyntax) -> Variable? {
-    if let result = cachedReferenceResolved[node] {
-      return result.variable
-    }
-    
-    var scope: Scope? = getClosetScopeThatCanResolve(node)
-    while scope != nil {
-      let group = getScopesTogetherWithAllExtensions(scope!)
-      for scope in group {
-        if let variable = scope.resolveVariable(node) {
-          cachedReferenceResolved[node] = .variable(variable)
-          cachedVariableReferences[variable] = (cachedVariableReferences[variable] ?? []) + [node]
-          return variable
-        }
+    return resolveSymbol(node, options: [.variable]) { resolve -> Bool in
+      if resolve.variable != nil {
+        return true
       }
-      scope = scope?.parent
-    }
-    
-    return nil
+      return false
+    }?.variable
   }
   
   func getVariableReferences(variable: Variable) -> [IdentifierExprSyntax] {
     return cachedVariableReferences[variable] ?? []
   }
   
-  private func trace(_ node: IdentifierExprSyntax) -> Variable? {
+  private func _trace(_ node: IdentifierExprSyntax) -> Variable? {
     guard let variable = resolveVariable(node) else {
       return nil
     }
@@ -305,99 +332,91 @@ extension Graph {
 
 // MARK: - Function resolve
 extension Graph {
-  func resolveFunctionCall(_ node: FunctionCallExprSyntax) -> (Function, Function.MatchResult.MatchedInfo)? {
-    if node.calledExpression is IdentifierExprSyntax { // doSmth(...) or A(...)
-      // TODO (Le): identifier could be type, eg A(...), it's better to resolve symbol here instead of resolve func
-      return resolveFunctionCall(node, scope: getEnclosingScope(node))
-    }
-    
-    if let memberAccessExpr = node.calledExpression as? MemberAccessExprSyntax { // a.b.doSmth(...)
+  func resolveFunction(_ node: FunctionCallExprSyntax) -> (Function, Function.MatchResult.MappingInfo)? {
+    switch node.calledExpression {
+    case let identifier as IdentifierExprSyntax: // doSmth(...) or A(...)
+      return _resolveFunction(symbol: identifier.identifier, node: node, scope: enclosingScopeForNode(node))
+    case let memberAccessExpr as MemberAccessExprSyntax: // a.doSmth(...)
       guard let base = memberAccessExpr.base else {
-        fatalError("Is it possible that `base` is nil ?")
+        assert(false, "Is it possible that `base` is nil ?")
+        return nil
       }
       if couldReferenceSelf(base) {
-        return resolveFunctionCall(node, scope: getEnclosingScope(node))
+        return _resolveFunction(symbol: memberAccessExpr.name, node: node, scope: enclosingScopeForNode(node))
       }
-      if let simpleTypeIdentifier = getType(base).simpleIdentifierType {
-        // TODO (Le)
-      }
+      // TODO
+//      else if let typeName = _resolveType(base).exactType?.name {
+//        sourceFileScope.findTypeDeclOrExtension(name: typeName)
+//      }
+      return nil
+      
+    case is ImplicitMemberExprSyntax: // .create { ... }
+      // TODO
+      return nil
+    case is OptionalChainingExprSyntax: // optional closure
+      // TODO
+      return nil
+    default:
+      assert(false, "Unhandled case")
       return nil
     }
-    
-    // .create { ... }
-    if node.calledExpression is ImplicitMemberExprSyntax {
-      // TODO (Le): we may want to visit later
-      return nil
-    }
-    
-    if node.calledExpression is OptionalChainingExprSyntax {
-      // Must be optional closure. We only care about function for now
-      return nil
-    }
-    
-//    fatalError("Just want to see what it looks like")
-    // TODO (Le): there're more, eg SpecializeExprSyntax (X<Y>(...))
-    return nil
   }
   
-  // TODO (Le): this could resole to `closure` as well
+  // TODO: this could resole to `closure` as well
   // Currently we only resolve to `func`
-  private func resolveFunctionCall(_ node: FunctionCallExprSyntax, scope: Scope) -> (Function, Function.MatchResult.MatchedInfo)? {
-    var scope = scope
-    while true {
-      let group = getScopesTogetherWithAllExtensions(scope)
-      let matchedFunctions = group
-        .flatMap { $0.functions }
-        .compactMap { function -> (Function, Function.MatchResult.MatchedInfo)? in
-          switch function.match(node) {
-            case .argumentMismatch,
-                 .nameMismatch:
-              return nil
-          case .matched(let info):
-            return (function, info)
+  private func _resolveFunction(symbol: TokenSyntax, node: FunctionCallExprSyntax,  scope: Scope) -> (Function, Function.MatchResult.MappingInfo)? {
+    // Wrap funcName into a IdentifierExprSyntax
+    let identifier = IdentifierExprSyntax { builder in
+      builder.useIdentifier(symbol)
+    }
+    
+    var result: (Function, Function.MatchResult.MappingInfo)?
+    _ = resolveSymbol(identifier, startingFromScope: scope, options: [.function]) { resolve -> Bool in
+      switch resolve {
+      case .variable, .typeDeclOrExtension:
+        return false
+      case .function(let function):
+        switch function.match(node) {
+        case .argumentMismatch,
+             .nameMismatch:
+          return false
+        case .matched(let info):
+          guard result == nil else {
+            // Should not happenn
+            assert(false, "ambiguous")
+            return true // Exit
           }
+          result = (function, info)
+          return false // Continue to search to make sure no ambiguity
         }
-      
-      if matchedFunctions.count == 1 {
-        return matchedFunctions[0]
-      }
-      else if matchedFunctions.count >= 2 {
-        // Should not happenn
-        fatalError("ambiguous")
-      }
-      
-      if let parent = scope.parent {
-        scope = parent
-      } else {
-        break
       }
     }
     
-    return nil
+    return result
   }
 }
 
 // MARK: Type resolve
 extension Graph {
-  func getType(_ variable: Variable) -> TypeResolve {
+  func resolveType(_ variable: Variable) -> TypeResolve {
     if let type = cachedVariableType[variable] {
       return type
     }
     
-    let result = resolveType(variable.typeInfo)
+    let result = _resolveType(variable.typeInfo)
     cachedVariableType[variable] = result
     return result
   }
   
-  private func resolveType(_ typeInfo: TypeInfo) -> TypeResolve {
+  private func _resolveType(_ typeInfo: TypeInfo) -> TypeResolve {
     switch typeInfo {
     case .exact(let type):
-      return .exact(type)
+      return _resolveType(type)
     case .inferedFromExpr(let expr):
-      return getType(expr)
+      return _resolveType(expr)
     case .inferedFromClosure(let closureExpr, let paramIndex, let paramCount):
       // let x: (X, Y) -> Z = { a,b in ...}
-      if let closureVariable = getEnclosingScope(closureExpr).getVariable(bindingTo: closureExpr) {
+      if let closureVariable = enclosingScopeForNode(closureExpr).getVariable(bindingTo: closureExpr) {
         switch closureVariable.typeInfo {
         case .exact(let type):
           guard let tupleType = (type as? FunctionTypeSyntax)?.arguments else {
@@ -405,12 +424,13 @@ extension Graph {
             return .unknown
           }
           assert(tupleType.count == paramCount)
-          return .exact(tupleType[paramIndex].type)
+          return _resolveType(tupleType[paramIndex].type)
         case .inferedFromClosure,
              .inferedFromExpr,
              .inferedFromSequence,
              .inferedFromTuple:
-          fatalError("Seems wrong")
+          assert(false, "Seems wrong")
+          return .unknown
         }
       }
       // TODO: there's also this case
@@ -418,25 +438,25 @@ extension Graph {
       // b = { x in ... }
       return .unknown
     case .inferedFromSequence(let sequenceExpr):
-      let sequenceType = getType(sequenceExpr)
+      let sequenceType = _resolveType(sequenceExpr)
       return sequenceType.sequenceElementType
     case .inferedFromTuple(let tupleTypeInfo, let index):
-      if let tupleType = resolveType(tupleTypeInfo).tupleType {
-        return .exact(tupleType.elements[index].type)
+      if let tupleType = _resolveType(tupleTypeInfo).tupleType {
+        return _resolveType(tupleType.elements[index].type)
       }
       return .unknown
     }
   }
   
-  // TODO (Le): improve this func to handle more scenarios
-  private func getType(_ node: ExprSyntax) -> TypeResolve {
+  // TODO: improve this func to handle more scenarios
+  private func _resolveType(_ node: ExprSyntax) -> TypeResolve {
     if let optionalExpr = node as? OptionalChainingExprSyntax {
-      return .optional(base: getType(optionalExpr.expression))
+      return .optional(base: _resolveType(optionalExpr.expression))
     }
     
     if let identifierExpr = node as? IdentifierExprSyntax {
       if let variable = resolveVariable(identifierExpr) {
-        return getType(variable)
+        return resolveType(variable)
       }
       // May be global variable, may be type like Int, String,...
       return .unknown
@@ -450,21 +470,21 @@ extension Graph {
 //    }
     
     if let functionCallExpr = node as? FunctionCallExprSyntax {
-      return getFunctionReturnType(functionCallExpr: functionCallExpr)
+      return _resolveFunctionCallType(functionCallExpr: functionCallExpr)
     }
     
     if let arrayExpr = node as? ArrayExprSyntax {
-      return .sequence(elementType: getType(arrayExpr.elements[0].expression))
+      return .sequence(elementType: _resolveType(arrayExpr.elements[0].expression))
     }
     
-    if let dictionaryExpr = node as? DictionaryExprSyntax {
+    if node is DictionaryExprSyntax {
       return .dict
     }
     
     if let range = node.rangeInfo {
-      if let leftType = range.left.flatMap({ getType($0) })?.nilIfUnknown {
+      if let leftType = range.left.flatMap({ _resolveType($0) })?.toNilIfUnknown {
         return .sequence(elementType: leftType)
-      } else if let rightType = range.right.flatMap({ getType($0) })?.nilIfUnknown {
+      } else if let rightType = range.right.flatMap({ _resolveType($0) })?.toNilIfUnknown {
         return .sequence(elementType: rightType)
       } else {
         return .unknown
@@ -474,57 +494,101 @@ extension Graph {
     return .unknown
   }
   
-  private func getFunctionReturnType(functionCallExpr: FunctionCallExprSyntax, ignoreOptional: Bool = false) -> TypeResolve {
+  private func _resolveType(_ type: TypeSyntax) -> TypeResolve {
+    if type.isOptional {
+      return .optional(base: _resolveType(type.wrapped))
+    }
+    
+    switch type {
+    case let arrayType as ArrayTypeSyntax:
+      return .sequence(elementType: _resolveType(arrayType.elementType))
+    case is DictionaryTypeSyntax:
+      return .dict
+    case let tupleType as TupleTypeSyntax:
+      return .tuple(tupleType)
+    default:
+      if let tokens = type.tokens {
+        return .name(tokens.map { $0.text })
+      }
+      return .unknown
+    }
+  }
+  
+  private func _resolveFunctionCallType(functionCallExpr: FunctionCallExprSyntax, ignoreOptional: Bool = false) -> TypeResolve {
+    if let (function, _) = resolveFunction(functionCallExpr) {
+      if let type = function.signature.output?.returnType {
+        return _resolveType(type)
+      } else {
+        return .unknown // Void
+      }
+    }
+    
     var calledExpr = functionCallExpr.calledExpression
     
     if let optionalExpr = calledExpr as? OptionalChainingExprSyntax { // Must be optional closure
       if !ignoreOptional {
-        return .optional(base: getFunctionReturnType(functionCallExpr: functionCallExpr, ignoreOptional: true))
+        return .optional(base: _resolveFunctionCallType(functionCallExpr: functionCallExpr, ignoreOptional: true))
       } else {
         calledExpr = optionalExpr.expression
-      }
-    } else {
-      if let (function, _) = resolveFunctionCall(functionCallExpr) {
-        if let type = function.node.signature.output?.returnType {
-          return .exact(type)
-        } else {
-          return .unknown // Void
-        }
       }
     }
     
     // [X]()
     if let arrayExpr = calledExpr as? ArrayExprSyntax {
       if let typeIdentifier = arrayExpr.elements[0].expression as? IdentifierPatternSyntax {
-        let simpleType = SimpleTypeIdentifierSyntax { builder in
-          builder.useName(typeIdentifier.identifier)
-        }
-        return .sequence(elementType: .exact(simpleType))
+        return .sequence(elementType: .name([typeIdentifier.identifier.text]))
       } else {
-        return .sequence(elementType: getType(arrayExpr.elements[0].expression))
+        return .sequence(elementType: _resolveType(arrayExpr.elements[0].expression))
       }
     }
     
     // [X: Y]()
-    if let dictExpr = calledExpr as? DictionaryExprSyntax {
+    if calledExpr is DictionaryExprSyntax {
       return .dict
     }
     
+    // doSmth() or A()
+    if let identifierExpr = calledExpr as? IdentifierExprSyntax {
+      let result = resolveSymbol(identifierExpr) { resolve in
+        switch resolve {
+        case .function(let function):
+          return function.match(functionCallExpr).isMatched
+        case .typeDeclOrExtension:
+          return true
+        case .variable:
+          return false
+        }
+      }
+      if let result = result {
+        switch result {
+          // doSmth()
+        case .function(let function):
+          let returnType = function.signature.output?.returnType
+          return returnType.flatMap { _resolveType($0) } ?? .unknown
+          // A()
+        case .typeDeclOrExtension(let scope):
+          return .name(scope.typeDeclOrExtensionTokens!.map { $0.text })
+        case .variable:
+          break
+        }
+      }
+    }
+    
     // x.y()
-    // TODO (Le): here we only resolve a very specific scenario
+    // TODO: here we only resolve a very specific scenario
     if let memberAccessExpr = calledExpr as? MemberAccessExprSyntax {
       guard let base = memberAccessExpr.base else {
         fatalError("Is it possible that `base` is nil ?")
       }
       
-      let typeOfBase = getType(base)
-      if typeOfBase.isCollection {
+      let baseType = _resolveType(base)
+      if _isCollection(baseType) {
         let funcName = memberAccessExpr.name.text
         if ["map", "flatMap", "compactMap", "enumerated"].contains(funcName) {
           return .sequence(elementType: .unknown)
         }
         if ["filter", "sort"].contains(funcName) {
-          return typeOfBase
+          return baseType
         }
       }
       
@@ -536,7 +600,6 @@ extension Graph {
 }
 
 // MARK: - Classification
-// NOTE: it's not reliable before the graph is fully built
 extension Graph {
   func isClosureEscape(_ node: ClosureExprSyntax, nonEscapeRules: [NonEscapeRule]) -> Bool {
     func _isClosureEscape(_ node: ExprSyntax) -> Bool {
@@ -551,7 +614,7 @@ extension Graph {
       
       // let x = {...}
       // `x` may be used anywhere
-      if let variable = getEnclosingScope(node).getVariable(bindingTo: node) {
+      if let variable = enclosingScopeForNode(node).getVariable(bindingTo: node) {
         let references = getVariableReferences(variable: variable)
         for reference in references {
           if _isClosureEscape(reference) == true {
@@ -564,21 +627,21 @@ extension Graph {
       
       // Used as argument in function call: doSmth(a, b, c: {...}) or doSmth(a, b) {...}
       if let (functionCall, argument, isTrailing) = node.getArgumentInfoInFunctionCall() {
-        if let (function, matchedInfo) = resolveFunctionCall(functionCall) {
+        if let (function, matchedInfo) = resolveFunction(functionCall) {
           let param: FunctionParameterSyntax!
           if let argument = argument {
             param = matchedInfo.argumentToParamMapping[argument]
           } else {
             guard isTrailing else { fatalError("Something weird") }
-            param = matchedInfo.trailingClosureParam
+            param = matchedInfo.trailingClosureArgumentToParam
           }
           guard param != nil else { fatalError("Something wrong") }
           
           // get the `.function` scope where we define this func
-          let scope = getScope(function.node)
+          let scope = scopeForNode(function)
           assert(scope.isFunction)
-          let paramName: TokenSyntax! = param.secondName ?? param.firstName
-          guard let variableForParam = scope.getVariable(paramName) else { fatalError("Something wrong") }
+          let paramToken: TokenSyntax! = param.secondName ?? param.firstName
+          guard let variableForParam = scope.getVariable(paramToken) else { fatalError("Something wrong") }
           let references = getVariableReferences(variable: variableForParam)
           for referennce in references {
             if _isClosureEscape(referennce) == true {
@@ -596,7 +659,7 @@ extension Graph {
       
       // Finally, fallback to rules
       for rule in nonEscapeRules {
-        if rule.isNonEscape(closureNode: node) {
+        if rule.isNonEscape(closureNode: node, graph: self) {
           return false // Not escape
         }
       }
@@ -610,11 +673,28 @@ extension Graph {
   }
   
   func isCollection(_ node: ExprSyntax) -> Bool {
-    return getType(node).isCollection
+    let type = _resolveType(node)
+    return _isCollection(type)
   }
   
   func isOptional(_ node: ExprSyntax) -> Bool {
-    return getType(node).isOptional
+    return _resolveType(node).isOptional
+  }
+  
+  private func _isCollection(_ type: TypeResolve) -> Bool {
+    switch type {
+    case .tuple,
+         .unknown:
+      return false
+    case .sequence,
+         .dict:
+      return true
+    case .optional(let base):
+      return _isCollection(base)
+    case .name:
+      // TODO
+      return false
+    }
   }
 }
 

@@ -5,7 +5,6 @@
 //  Created by Hoang Le Pham on 28/10/2019.
 //
 
-// https://gitlab.myteksi.net/mobile/dax-ios/driver-ios/merge_requests/6810
 class X {
   private func createProfileV3Item() -> NavigatorItem {
     return RevampedProfileV2Builder.build(

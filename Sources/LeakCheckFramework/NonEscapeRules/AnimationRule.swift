@@ -14,30 +14,30 @@ public final class AnimationRule: NonEscapeRule {
   
   public init() {}
   
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     guard let (funcCallExpr, arg, isTrailing) = closureNode.getArgumentInfoInFunctionCall() else {
       return false
     }
     
-    let (base, functionName) = funcCallExpr.baseAndSymbol
-    guard base == "UIView" else {
-      return false
+    guard let (base, funcName) = funcCallExpr.baseAndSymbol.flatMap({ ($0.0, $0.1.text) }),
+      base?.description.trimmingCharacters(in: .whitespacesAndNewlines) == "UIView" else {
+        return false
     }
     
     guard isTrailing || arg?.label?.text == "animations" || arg?.label?.text == "completion" else {
       return false
     }
     
-    if functionName == "animate" {
+    if funcName == "animate" {
       let signature1 = FunctionSignature(
-        name: functionName,
+        funcName: funcName,
         params: [
           FunctionParam(name: "withDuration"),
           FunctionParam(name: "animations", isClosure: true)
         ])
       
       let signature2 = FunctionSignature(
-        name: functionName,
+        funcName: funcName,
         params: [
           FunctionParam(name: "withDuration"),
           FunctionParam(name: "animations", isClosure: true),
@@ -45,7 +45,7 @@ public final class AnimationRule: NonEscapeRule {
         ])
       
       let signature3 = FunctionSignature(
-        name: functionName,
+        funcName: funcName,
         params: [
           FunctionParam(name: "withDuration"),
           FunctionParam(name: "delay"),
@@ -54,7 +54,7 @@ public final class AnimationRule: NonEscapeRule {
           FunctionParam(name: "completion", isClosure: true, canOmit: true)
         ])
       let signature4 = FunctionSignature(
-        name: functionName,
+        funcName: funcName,
         params: [
           FunctionParam(name: "withDuration"),
           FunctionParam(name: "delay"),
@@ -72,9 +72,9 @@ public final class AnimationRule: NonEscapeRule {
         || signature4.match(funcCallExpr).isMatched
     }
     
-    if functionName == "transition" {
+    if funcName == "transition" {
       let signature1 = FunctionSignature(
-        name: functionName,
+        funcName: funcName,
         params: [
           FunctionParam(name: "from"),
           FunctionParam(name: "to"),
@@ -84,7 +84,7 @@ public final class AnimationRule: NonEscapeRule {
         ])
       
       let signature2 = FunctionSignature(
-        name: functionName,
+        funcName: funcName,
         params: [
           FunctionParam(name: "with"),
           FunctionParam(name: "duration"),
@@ -96,9 +96,9 @@ public final class AnimationRule: NonEscapeRule {
       return signature1.match(funcCallExpr).isMatched || signature2.match(funcCallExpr).isMatched
     }
     
-    if functionName == "animateKeyframes" {
+    if funcName == "animateKeyframes" {
       let signature = FunctionSignature(
-        name: functionName,
+        funcName: funcName,
         params: [
           FunctionParam(name: "withDuration"),
           FunctionParam(name: "delay", canOmit: true),

@@ -96,7 +96,7 @@ final class LeakDetectorTests: XCTestCase {
         return [
           AnimationRule(),
           DispatchQueueRule(),
-          FPOperatorsRule(graph: graph)
+          FPOperatorsRule()
         ]
       })
       let leaks = try leakDetector.detect(content: content)

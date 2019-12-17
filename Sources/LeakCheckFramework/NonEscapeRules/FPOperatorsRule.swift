@@ -10,32 +10,29 @@ import SwiftSyntax
 /// Functional programming rules like forEach, map, flatMap,...
 public final class FPOperatorsRule: ComposeNonEscapeRule {
   
-  public init(graph: Graph) {
+  public init() {
     super.init(rules: [
-      SwiftForEachRule(graph: graph),
-      SwiftCompactMapRule(graph: graph),
-      SwiftMapRule(graph: graph),
-      SwiftFilterRule(graph: graph),
-      SwiftSortRule(graph: graph),
-      SwiftFlatMapRule(graph: graph)
+      SwiftForEachRule(),
+      SwiftCompactMapRule(),
+      SwiftMapRule(),
+      SwiftFilterRule(),
+      SwiftSortRule(),
+      SwiftFlatMapRule()
     ])
   }
 }
 
 public final class SwiftForEachRule: NonEscapeRule {
-  private let graph: Graph
-  init(graph: Graph) {
-    self.graph = graph
-  }
-  
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     guard let (funcCallExpr, arg, isTrailing) = closureNode.getArgumentInfoInFunctionCall() else {
       return false
     }
     
-    let (_, functionName) = funcCallExpr.baseAndSymbol
-    guard functionName == "forEach", funcCallExpr.argumentList.count == 0, isTrailing else {
-      return false
+    guard let (_, functionName) = funcCallExpr.baseAndSymbol.flatMap({ ($0.0, $0.1.text) }),
+      functionName == "forEach",
+      funcCallExpr.argumentList.count == 0,
+      isTrailing else {
+        return false
     }
     
     return true
@@ -43,12 +40,7 @@ public final class SwiftForEachRule: NonEscapeRule {
 }
 
 public final class SwiftCompactMapRule: NonEscapeRule {
-  private let graph: Graph
-  init(graph: Graph) {
-    self.graph = graph
-  }
-  
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     return closureNode.isArgumentInFunctionCall(
       functionNamePredicate: { $0 == "compactMap" },
       argumentNamePredicate: { $0 == "" }, // Swift's Collection compactMap func doesn't have argument name
@@ -58,12 +50,7 @@ public final class SwiftCompactMapRule: NonEscapeRule {
 }
 
 public final class SwiftMapRule: NonEscapeRule {
-  private let graph: Graph
-  init(graph: Graph) {
-    self.graph = graph
-  }
-  
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     return closureNode.isArgumentInFunctionCall(
       functionNamePredicate: { $0 == "map" },
       argumentNamePredicate: { $0 == "" }, // Swift's Collection/Optional map func doesn't have argument name
@@ -73,12 +60,7 @@ public final class SwiftMapRule: NonEscapeRule {
 }
 
 public final class SwiftFlatMapRule: NonEscapeRule {
-  private let graph: Graph
-  init(graph: Graph) {
-    self.graph = graph
-  }
-  
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     return closureNode.isArgumentInFunctionCall(
       functionNamePredicate: { $0 == "flatMap" },
       argumentNamePredicate: { $0 == "" }, // Swift's Collection/Optional flatMap func doesn't have argument name
@@ -88,12 +70,7 @@ public final class SwiftFlatMapRule: NonEscapeRule {
 }
 
 public final class SwiftFilterRule: NonEscapeRule {
-  private let graph: Graph
-  init(graph: Graph) {
-    self.graph = graph
-  }
-  
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     return closureNode.isArgumentInFunctionCall(
       functionNamePredicate: { $0 == "filter" },
       argumentNamePredicate: { $0 == "" }, // Swift's Collection filter func doesn't have argument name
@@ -103,12 +80,7 @@ public final class SwiftFilterRule: NonEscapeRule {
 }
 
 public final class SwiftSortRule: NonEscapeRule {
-  private let graph: Graph
-  init(graph: Graph) {
-    self.graph = graph
-  }
-  
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     return closureNode.isArgumentInFunctionCall(
       functionNamePredicate: { $0 == "sort" },
       argumentNamePredicate: { $0 == "" }, // Swift's Collection sort func doesn't have argument name

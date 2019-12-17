@@ -21,6 +21,11 @@ public enum RawVariable {
   }
 }
 
+// Represent a variable declaration. Eg
+// var a = 1
+// let b = c // b is the Variable, c is not (c is a reference)
+// block { [unowned x] in // x is a Variable
+// func doSmth(a: Int, b: String) // a, b are Variables
 public class Variable: Hashable, CustomStringConvertible {
   public let raw: RawVariable
   public var name: String { return raw.token.text }

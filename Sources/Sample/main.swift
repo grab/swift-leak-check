@@ -27,7 +27,7 @@ do {
         return [
           AnimationRule(),
           DispatchQueueRule(),
-          FPOperatorsRule(graph: graph)
+          FPOperatorsRule()
         ]
       })
       

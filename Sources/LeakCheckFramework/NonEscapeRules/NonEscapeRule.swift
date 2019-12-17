@@ -8,7 +8,7 @@
 import SwiftSyntax
 
 public protocol NonEscapeRule {
-  func isNonEscape(closureNode: ExprSyntax) -> Bool
+  func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool
 }
 
 open class ComposeNonEscapeRule: NonEscapeRule {
@@ -19,9 +19,9 @@ open class ComposeNonEscapeRule: NonEscapeRule {
     self.rules = rules
   }
   
-  public func isNonEscape(closureNode: ExprSyntax) -> Bool {
+  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
     for rule in rules {
-      if rule.isNonEscape(closureNode: closureNode) {
+      if rule.isNonEscape(closureNode: closureNode, graph: graph) {
         return true
       }
     }

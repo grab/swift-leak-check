@@ -62,6 +62,16 @@
             ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Users/hoang.le/Projects/driver-ios/TechFamilies/Deliveries"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/hoang.le/Projects/driver-ios/TechFamilies/Payment/"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

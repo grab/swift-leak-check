@@ -180,38 +180,34 @@ public extension MemberAccessExprSyntax {
 }
 
 public extension TypeSyntax {
-  var isCollection: Bool {
-    return self is ArrayTypeSyntax || self is DictionaryTypeSyntax
+  var isOptional: Bool {
+    return self is OptionalTypeSyntax || self is ImplicitlyUnwrappedOptionalTypeSyntax
   }
   
-  var sequenceElementType: TypeSyntax? {
+  var wrapped: TypeSyntax {
     if let optionalType = self as? OptionalTypeSyntax {
-      return optionalType.wrappedType.sequenceElementType
+      return optionalType.wrappedType
     }
-    if let arrayType = self as? ArrayTypeSyntax {
-      return arrayType.elementType
+    if let implicitOptionalType = self as? ImplicitlyUnwrappedOptionalTypeSyntax {
+      return implicitOptionalType.wrappedType
     }
-    return nil
+    return self
   }
   
-  var tupleType: TupleTypeSyntax? {
-    if let optionalType = self as? OptionalTypeSyntax {
-      return optionalType.wrappedType.tupleType
+  var tokens: [TokenSyntax]? {
+    if self == wrapped {
+      if let type = self as? MemberTypeIdentifierSyntax {
+        if let base = type.baseType.tokens {
+          return base + [type.name]
+        }
+        return nil
+      }
+      if let type = self as? SimpleTypeIdentifierSyntax {
+        return [type.name]
+      }
+      return nil
     }
-    if let tupleType = self as? TupleTypeSyntax {
-      return tupleType
-    }
-    return nil
-  }
-  
-  var typePath: [TokenSyntax] {
-    if let type = self as? MemberTypeIdentifierSyntax {
-      return type.baseType.typePath + [type.name]
-    }
-    if let type = self as? SimpleTypeIdentifierSyntax {
-      return [type.name]
-    }
-    fatalError("Unhandled case")
+    return wrapped.tokens
   }
 }
 
@@ -224,30 +220,31 @@ public extension OptionalBindingConditionSyntax {
 }
 
 public extension FunctionCallExprSyntax {
-  var baseAndSymbol: (base: String?, symbol: String) {
+  var baseAndSymbol: (base: ExprSyntax?, symbol: TokenSyntax)? {
     return calledExpression.baseAndSymbol
   }
 }
 // Only used for the FunctionCallExprSyntax extension above
 private extension ExprSyntax {
-  var baseAndSymbol: (base: String?, symbol: String) {
+  var baseAndSymbol: (base: ExprSyntax?, symbol: TokenSyntax)? {
     if let identifier = self as? IdentifierExprSyntax {
-      return (base: nil, symbol: identifier.identifier.text)
+      return (base: nil, symbol: identifier.identifier)
     }
     if let memberAccessExpr = self as? MemberAccessExprSyntax {
-      return (base: (memberAccessExpr.base as? IdentifierExprSyntax)?.identifier.text,
-              symbol: memberAccessExpr.name.text)
+      return (base: (memberAccessExpr.base as? IdentifierExprSyntax),
+              symbol: memberAccessExpr.name)
     }
     if let implicitMemberExpr = self as? ImplicitMemberExprSyntax {
-      return (base: nil, symbol: implicitMemberExpr.name.text)
+      return (base: nil, symbol: implicitMemberExpr.name)
     }
     if let optionalChainingExpr = self as? OptionalChainingExprSyntax {
       return optionalChainingExpr.expression.baseAndSymbol
     }
     if self is SpecializeExprSyntax {
-      return (base: nil, symbol: "")
+      return nil
     }
-    fatalError("Not sure how it looks like")
+    assert(false, "Not sure how it looks like")
+    return nil
   }
 }
 

@@ -3,7 +3,7 @@ class X {
     let block: ([Int], X) -> Void = { [weak self] a, x in
       guard let strongSelf = self else { return }
       a.map { val in
-        strongSelf.process(val) // No Leak
+        strongSelf.process(val)
       }
       x.map {
         strongSelf.process(val) // Leak
@@ -14,10 +14,10 @@ class X {
 
     let block: ([Int], X) -> Void = { a, x in
       a.map { val in
-        self.process(val) // No Leak
+        self.process(val)
       }
       x.map {
-        self.process(val) // No Leak
+        self.process(val)
       }
     }
 
@@ -35,14 +35,14 @@ class X {
 
   func forEach() {
     x.forEach {
-      self.doSmth() // No Leak
+      self.doSmth()
     }
   }
 
   func tupleClosure() {
     let (a, b) = (
       closure1: {
-        self.doSmth() // No Leak
+        self.doSmth()
       },
       closure2: {
         self.doSmth() // Leak
@@ -55,7 +55,7 @@ class X {
 
   func nonEscapeClosure() {
     let a = {
-      self.doSmth() // No Leak
+      self.doSmth()
     }
     a()
   }

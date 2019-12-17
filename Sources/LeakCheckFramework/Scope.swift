@@ -130,43 +130,6 @@ public enum ScopeNode: Hashable {
     case .switchCaseNode: return .switchCaseNode
     }
   }
-  
-  public var isDataTypeScope: Bool {
-    switch self {
-    case .classNode,
-         .structNode,
-         .enumNode,
-         .extensionNode:
-      return true
-    case .sourceFileNode,
-         .funcNode,
-         .enumCaseNode,
-         .initialiseNode,
-         .closureNode,
-         .ifNode,
-         .guardNode,
-         .forLoopNode,
-         .whileLoopNode,
-         .subscriptNode,
-         .accessorNode,
-         .variableDeclNode,
-         .switchCaseNode:
-      return false
-    }
-  }
-  
-  public var isFunction: Bool {
-    return type == .funcNode
-      || type == .initialiseNode
-      || type == .closureNode
-      || type == .subscriptNode
-  }
-  
-  // Whether a variable can be used before it's declared. This is true for node that defines type, such as class, struct, enum,....
-  // Otherwise if a variable is inside func, or closure, or normal block (if, guard,..), it must be declared before being used
-  public var canUseVariableInAnyOrder: Bool {
-    return isDataTypeScope
-  }
 }
 
 public enum ScopeType: Equatable {
@@ -195,18 +158,51 @@ open class Scope: Hashable, CustomStringConvertible {
   public private(set) var variables = Stack<Variable>()
   public private(set) var childScopes = [Scope]()
   
-  var functions: [Function] {
+  public var functions: [Function] {
     return childScopes
       .compactMap { scope in
         if case let .funcNode(funcNode) = scope.scopeNode {
-          return Function(node: funcNode)
+          return funcNode
         }
         return nil
       }
   }
   
-  open var isFunction: Bool {
-    return scopeNode.isFunction
+  public var scopeType: ScopeType {
+    return scopeNode.type
+  }
+  
+  /// Just the name of the class/struct/enum/extension.
+  public var typeDeclOrExtensionTokens: [TokenSyntax]? {
+    switch scopeNode {
+    case .classNode(let node):
+      return [node.identifier]
+    case .structNode(let node):
+      return [node.identifier]
+    case .enumNode(let node):
+      return [node.identifier]
+    case .extensionNode(let node):
+      return node.extendedType.tokens
+    default:
+      return nil
+    }
+  }
+  
+  public var isFunction: Bool {
+    return scopeType == .funcNode
+      || scopeType == .initialiseNode
+      || scopeType == .closureNode
+      || scopeType == .subscriptNode
+  }
+  
+  // Whether a variable can be used before it's declared. This is true for node that defines type, such as class, struct, enum,....
+  // Otherwise if a variable is inside func, or closure, or normal block (if, guard,..), it must be declared before being used
+  public var canUseVariableOrFuncInAnyOrder: Bool {
+    return scopeType == .classNode
+      || scopeType == .structNode
+      || scopeType == .enumNode
+      || scopeType == .extensionNode
+      || scopeType == .sourceFileNode
   }
   
   public init(scopeNode: ScopeNode, parent: Scope?) {
@@ -219,26 +215,25 @@ open class Scope: Hashable, CustomStringConvertible {
     }
   }
   
-  open func addVariable(_ variable: Variable) {
+  func addVariable(_ variable: Variable) {
     assert(variable.scope == self)
     variables.push(variable)
   }
   
-  open func getVariable(_ token: TokenSyntax) -> Variable? {
+  public func getVariable(_ token: TokenSyntax) -> Variable? {
     return variables.first(where: { $0.raw.token == token })
   }
   
-  open func resolveVariable(_ node: IdentifierExprSyntax) -> Variable? {
-    // We travel bottom up, so the first few variables might be irrelevant
+  public func findVariable(_ reference: IdentifierExprSyntax) -> Variable? {
     for variable in variables {
       // Special case: guard let `x` = x
       // Here x on the right cannot be resolved to x on the left
-      if case let .binding(_, valueNode) = variable.raw, valueNode != nil && valueNode! == node {
+      if case let .binding(_, valueNode) = variable.raw, valueNode != nil && valueNode! == reference {
         continue
       }
       
-      if scopeNode.canUseVariableInAnyOrder || variable.raw.token.isBefore(node) {
-        if variable.name == node.identifier.text {
+      if variable.raw.token.isBefore(reference) || canUseVariableOrFuncInAnyOrder {
+        if variable.name == reference.identifier.text {
           return variable
         }
       }
@@ -247,25 +242,51 @@ open class Scope: Hashable, CustomStringConvertible {
     return nil
   }
   
-  open func getEnclosingScope(_ node: Syntax) -> Scope? {
+  public func findFunction(reference: IdentifierExprSyntax) -> [Function] {
+    return functions.filter { function in
+      if function.identifier.isBefore(reference) || canUseVariableOrFuncInAnyOrder {
+        return function.identifier.text == reference.identifier.text
+      }
+      return false
+    }
+  }
+  
+  public func findTypeDeclOrExtension(name: String) -> [Scope] {
+    return childScopes.filter { scope in
+      if let tokens = scope.typeDeclOrExtensionTokens {
+        return tokens.count == 1 && tokens[0].text == name
+      }
+      return false
+    }
+  }
+  
+  /// Get the scope that encloses a given node
+  /// Eg, Scopes that enclose a func could be class, enum,...
+  /// Or scopes that enclose a statement could be func, closure,...
+  /// - Parameter node: A node
+  /// - Returns: The scope that encloses the node
+  public func findEnclosingScope(_ node: Syntax) -> Scope? {
     guard let scopeNode = node.enclosingScopeNode else {
       return nil
     }
-    return getScope(scopeNode)
+    return findScope(scopeNode)
   }
   
-  open func getScope(_ node: Syntax) -> Scope? {
+  /// Return the corresponding scope of a node if the node is of scope-type (class, func, closure,...)
+  /// or return the enclosing scope if the node is not scope-type
+  /// - Parameter node: The node
+  public func findScope(_ node: Syntax) -> Scope? {
     guard let scopeNode = ScopeNode.from(node: node) else {
-      return nil
+      return findEnclosingScope(node)
     }
-    return getScope(scopeNode)
+    return findScope(scopeNode)
   }
   
-  open func getScope(_ scopeNode: ScopeNode) -> Scope? {
+  private func findScope(_ scopeNode: ScopeNode) -> Scope? {
     if self.scopeNode == scopeNode {
       return self
     }
-    return childScopes.lazy.compactMap { return $0.getScope(scopeNode) }.first
+    return childScopes.lazy.compactMap { return $0.findScope(scopeNode) }.first
   }
   
   open var description: String {

@@ -16,7 +16,7 @@ open class Leak: CustomStringConvertible, Encodable {
     return node.positionAfterSkippingLeadingTrivia.line
   }
   
-  // TODO (Le): consider removing capturedNode
+  // TODO: consider removing capturedNode
   public init(node: IdentifierExprSyntax, capturedNode: ExprSyntax?) {
     self.node = node
     self.capturedNode = capturedNode
