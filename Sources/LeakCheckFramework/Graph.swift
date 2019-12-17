@@ -357,7 +357,7 @@ extension Graph {
       // TODO
       return nil
     default:
-      assert(false, "Unhandled case")
+      // Unhandled case
       return nil
     }
   }
