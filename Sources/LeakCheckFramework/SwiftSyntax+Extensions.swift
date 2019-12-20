@@ -248,6 +248,16 @@ private extension ExprSyntax {
   }
 }
 
+public extension FunctionParameterSyntax {
+  var isEscaping: Bool {
+    guard let attributedType = type as? AttributedTypeSyntax else {
+      return false
+    }
+    
+    return attributedType.attributes?.contains(where: { $0.attributeName.text == "escaping" }) == true
+  }
+}
+
 public extension AbsolutePosition {
   var prettyDescription: String {
     return "(line: \(line), column: \(column))"

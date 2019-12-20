@@ -32,6 +32,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		FC62B3CB23AB56BD00CFA9F5 /* EscapingAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC62B3CA23AB56BD00CFA9F5 /* EscapingAttribute.swift */; };
+		FC62B3CC23AB571D00CFA9F5 /* EscapingAttribute.swift in Resources */ = {isa = PBXBuildFile; fileRef = FC62B3CA23AB56BD00CFA9F5 /* EscapingAttribute.swift */; };
 		FCBAF01123A4A45D008C0C21 /* Animation.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_37 /* Animation.swift */; };
 		FCBAF01223A4A45D008C0C21 /* Leak1.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* Leak1.swift */; };
 		FCBAF01323A4A45D008C0C21 /* Leak2.swift in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Leak2.swift */; };
@@ -438,6 +440,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FC62B3CA23AB56BD00CFA9F5 /* EscapingAttribute.swift */ = {isa = PBXFileReference; explicitFileType = text; path = EscapingAttribute.swift; sourceTree = "<group>"; };
 		FCBAF0D123A62282008C0C21 /* FunctionSignature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionSignature.swift; sourceTree = "<group>"; };
 		"LeakCheckFramework::LeakCheckFramework::Product" /* LeakCheckFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LeakCheckFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"LeakCheckFramework::LeakCheckFrameworkTests::Product" /* LeakCheckFrameworkTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = LeakCheckFrameworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -913,6 +916,7 @@
 				OBJ_44 /* Leak7.swift */,
 				OBJ_45 /* Leak8.swift */,
 				OBJ_46 /* Leak9.swift */,
+				FC62B3CA23AB56BD00CFA9F5 /* EscapingAttribute.swift */,
 			);
 			path = Snippets;
 			sourceTree = "<group>";
@@ -1429,6 +1433,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FC62B3CC23AB571D00CFA9F5 /* EscapingAttribute.swift in Resources */,
 				FCBAF01123A4A45D008C0C21 /* Animation.swift in Resources */,
 				FCBAF01223A4A45D008C0C21 /* Leak1.swift in Resources */,
 				FCBAF01323A4A45D008C0C21 /* Leak2.swift in Resources */,
@@ -1511,6 +1516,7 @@
 				OBJ_284 /* Leak2.swift in Sources */,
 				OBJ_285 /* Leak3.swift in Sources */,
 				OBJ_286 /* Leak4.swift in Sources */,
+				FC62B3CB23AB56BD00CFA9F5 /* EscapingAttribute.swift in Sources */,
 				OBJ_287 /* Leak5.swift in Sources */,
 				OBJ_288 /* Leak6.swift in Sources */,
 				OBJ_289 /* Leak7.swift in Sources */,

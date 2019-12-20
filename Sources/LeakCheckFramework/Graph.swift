@@ -637,6 +637,14 @@ extension Graph {
           }
           guard param != nil else { fatalError("Something wrong") }
           
+          // If the param is marked as `@escaping`, we still cannot immediately return true here,
+          // because the non-escaping rules may think differently
+          // If the param is not marked as `@escaping`, and it's optional, we don't know anything about it
+          // If the param is not marked as `@escaping`, and it's not optional, we know it's non-escaping for sure
+          if !param.isEscaping && param.type?.isOptional != true {
+            return false
+          }
+          
           // get the `.function` scope where we define this func
           let scope = scopeForNode(function)
           assert(scope.isFunction)

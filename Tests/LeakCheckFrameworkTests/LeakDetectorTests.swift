@@ -49,6 +49,10 @@ final class LeakDetectorTests: XCTestCase {
     verify(fileName: "Animation")
   }
   
+  func testEscapingAttribute() {
+    verify(fileName: "EscapingAttribute")
+  }
+  
   func testTupleClosure() {
     let content = """
       func tupleClosure() {
