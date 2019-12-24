@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LeakCheckFramework::Sample"
-               BuildableName = "Sample"
-               BlueprintName = "Sample"
+               BlueprintIdentifier = "LeakCheckFramework::SwiftLeakChecker"
+               BuildableName = "SwiftLeakChecker"
+               BlueprintName = "SwiftLeakChecker"
                ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -56,18 +56,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "LeakCheckFramework::Sample"
-            BuildableName = "Sample"
-            BlueprintName = "Sample"
+            BlueprintIdentifier = "LeakCheckFramework::SwiftLeakChecker"
+            BuildableName = "SwiftLeakChecker"
+            BlueprintName = "SwiftLeakChecker"
             ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "/path/to/your/swift/file/or/folder"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
