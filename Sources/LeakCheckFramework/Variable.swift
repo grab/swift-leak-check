@@ -77,8 +77,8 @@ public class Variable: Hashable, CustomStringConvertible {
       guard let specifier = node.specifier?.first else {
         return nil
       }
-      // Not sure if it can be more than 1
-      assert(node.specifier!.count <= 1)
+      
+      assert(node.specifier!.count <= 1, "Unhandled case")
       
       guard let memoryAttribute = MemoryAttribute.from(specifier.text) else {
         fatalError("Unhandled specifier \(specifier.text)")
@@ -114,10 +114,8 @@ public class Variable: Hashable, CustomStringConvertible {
       fatalError()
     }
     
-    assert(token.tokenKind != .wildcardKeyword)
-    
-    // Just to see what `attributes` is. Can comment out
-    assert(node.attributes == nil)
+    assert(token.tokenKind != .wildcardKeyword, "Unhandled case")
+    assert(node.attributes == nil, "Unhandled case")
     
     guard let type = node.type else {
       // Type is omited, must be used in closure signature
@@ -139,8 +137,7 @@ public class Variable: Hashable, CustomStringConvertible {
       fatalError()
     }
     
-    // Not sure if any other scenario
-    assert(parent.parent is VariableDeclSyntax)
+    assert(parent.parent is VariableDeclSyntax, "Unhandled case")
     
     func _typeFromNode(_ node: PatternBindingSyntax) -> TypeInfo {
       // var a: Int
@@ -233,7 +230,7 @@ public class Variable: Hashable, CustomStringConvertible {
         return _variablesFromPattern(valueBindingPattern.valuePattern)
       }
       
-      assertionFailure("Just to see")
+      assertionFailure("Unhandled case")
       return []
     }
     

@@ -1,0 +1,16 @@
+class X {
+  func nonEscapeClosure() {
+    let block = {
+      self.doSmth()
+    }
+    block()
+  }
+
+  func anonymousClosure() {
+    _ = {
+      self.doSmth()
+    }()
+  }
+
+  func doSmth() {}
+}

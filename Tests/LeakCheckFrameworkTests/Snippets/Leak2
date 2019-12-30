@@ -1,0 +1,34 @@
+class X {
+
+  var x = 1
+
+  func main() {
+    doSmth(weak: self, onNext: { strongSelf in
+      self.x // Leak
+
+      strongSelf.x
+
+      strongSelf.x = self.x + 1 // Leak
+
+      strongSelf.doSmth { [weak self] in // Leak
+        guard let `self` = self else { return }
+        self.x
+      }
+    })
+
+    doSmth(weak: self, onNext: { strongSelf in
+      switch self.status { // Leak
+        case .ready:
+          self.doSmth() // Leak
+        default: break
+      }
+    })
+  }
+
+  func doSmth(weak myself: X, onNext: @escaping (X) -> Void) {
+    someObject.block { [weak mySelf] in
+      guard let strongSelf = mySelf else { return }
+      onNext(strongSelf)
+    }
+  }
+}

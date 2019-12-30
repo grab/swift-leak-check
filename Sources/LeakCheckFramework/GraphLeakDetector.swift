@@ -50,11 +50,16 @@ private final class LeakSyntaxVisitor: BaseGraphVistor {
       }
     }
     
+    if node.enclosingtClosureNode == nil {
+      // Not inside closure -> ignore
+      return
+    }
+    
     if !graph.couldReferenceSelf(node) {
       return
     }
     
-    var currentScope = graph.getClosetScopeThatCanResolve(node)
+    var currentScope = graph.getClosetScopeThatCanResolve(.identifier(node))
     var isEscape = false
     while true {
       if let variable = currentScope.findVariable(node) {

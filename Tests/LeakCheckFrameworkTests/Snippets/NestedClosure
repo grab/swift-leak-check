@@ -1,0 +1,54 @@
+class X {
+  let x = 1
+  func nonEscapingClosure() {
+    let block: ([Int], B) -> Void = { a, b in
+      a.map { val in
+        self.x
+      }
+      b.map {
+        // It captures `self` from outer closure `block`, but `block` is non-escaping
+        self.x
+      }
+    }
+
+    block()
+
+    _ = { [weak self] (a: [Int], b: B) in
+      guard let strongSelf = self else { return }
+      a.map {
+        self?.x
+        strongSelf.x
+      }
+      b.map {
+        self?.x
+        strongSelf.x // Leak
+      }
+    }
+  }
+
+  func escapingClosure() {
+    doSmth { (a: [Int], b: B) in
+      a.map { val in
+        self.x // Leak
+      }
+
+      b.map { [weak self] _ in // Leak
+        guard let `self` = self else { return }
+        self.x
+      }
+    }
+
+    doSmth { [weak self] (a: [Int], b: B) in
+      guard let strongSelf = self else { return }
+      a.map { val in
+        self?.x
+        strongSelf.x
+      }
+
+      b.map {
+        self?.x
+        strongSelf.x // Leak
+      }
+    }
+  }
+}

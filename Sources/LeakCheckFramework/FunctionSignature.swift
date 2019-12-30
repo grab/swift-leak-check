@@ -11,8 +11,8 @@ public struct FunctionSignature {
   public let funcName: String
   public let params: [FunctionParam]
   
-  public init(funcName: String, params: [FunctionParam]) {
-    self.funcName = funcName
+  public init(name: String, params: [FunctionParam]) {
+    self.funcName = name
     self.params = params
   }
   
@@ -20,7 +20,7 @@ public struct FunctionSignature {
     let funcName = functionDeclExpr.identifier.text
     let params = functionDeclExpr.signature.input.parameterList.map { FunctionParam(param: $0) }
     let mapping = Dictionary(uniqueKeysWithValues: zip(params, functionDeclExpr.signature.input.parameterList))
-    return (FunctionSignature(funcName: funcName, params: params), mapping)
+    return (FunctionSignature(name: funcName, params: params), mapping)
   }
   
   public enum MatchResult: Equatable {
@@ -45,7 +45,7 @@ public struct FunctionSignature {
   }
   
   public func match(_ functionCallExpr: FunctionCallExprSyntax) -> MatchResult {
-    guard funcName == functionCallExpr.baseAndSymbol?.symbol.text else {
+    guard funcName == functionCallExpr.symbol?.text else {
       return .nameMismatch
     }
     return match((ArgumentListWrapper(functionCallExpr.argumentList), functionCallExpr.trailingClosure))
@@ -111,7 +111,7 @@ public struct FunctionSignature {
   }
   
   private func removingFirstParam() -> FunctionSignature {
-    return FunctionSignature(funcName: funcName, params: Array(params[1...]))
+    return FunctionSignature(name: funcName, params: Array(params[1...]))
   }
 }
 
@@ -125,6 +125,7 @@ public struct FunctionParam: Hashable {
               secondName: String? = nil,
               isClosure: Bool = false,
               canOmit: Bool = false) {
+    assert(name != "_")
     self.name = name
     self.secondName = secondName
     self.isClosure = isClosure
@@ -132,7 +133,7 @@ public struct FunctionParam: Hashable {
   }
   
   public init(param: FunctionParameterSyntax) {
-    name = param.firstName?.text
+    name = (param.firstName?.text == "_" ? nil : param.firstName?.text)
     secondName = param.secondName?.text
     isClosure = param.type is FunctionTypeSyntax
       || (param.type as? AttributedTypeSyntax)?.baseType is FunctionTypeSyntax

@@ -17,32 +17,12 @@ final class LeakDetectorTests: XCTestCase {
     verify(fileName: "Leak2")
   }
   
-  func testLeak3() {
-    verify(fileName: "Leak3")
+  func testNestedClosure() {
+    verify(fileName: "NestedClosure")
   }
   
-  func testLeak4() {
-    verify(fileName: "Leak4")
-  }
-  
-  func testLeak5() {
-    verify(fileName: "Leak5")
-  }
-  
-  func testLeak6() {
-    verify(fileName: "Leak6")
-  }
-  
-  func testLeak7() {
-    verify(fileName: "Leak7")
-  }
-  
-  func testLeak8() {
-    verify(fileName: "Leak8")
-  }
-  
-  func testLeak9() {
-    verify(fileName: "Leak9")
+  func testNonEscapingClosure() {
+    verify(fileName: "NonEscapingClosure")
   }
   
   func testUIKitAnimation() {
@@ -53,26 +33,27 @@ final class LeakDetectorTests: XCTestCase {
     verify(fileName: "EscapingAttribute")
   }
   
-  func testTupleClosure() {
-    let content = """
-      func tupleClosure() {
-        let (a, b) = (
-          closure1: {
-            self.doSmth() // No Leak
-          },
-          closure2: {
-            self.doSmth() // Leak
-          }
-        )
-
-        a()
-        doSmthWithCallback(b)
-      }
-    """
-    verify(content: content)
+  func testIfElse() {
+    verify(fileName: "IfElse")
   }
   
-  private func verify(fileName: String, extension: String? = "swift") {
+  func testFuncResolve() {
+    verify(fileName: "FuncResolve")
+  }
+  
+  func testTypeInfer() {
+    verify(fileName: "TypeInfer")
+  }
+  
+  func testTypeResolve() {
+    verify(fileName: "TypeResolve")
+  }
+  
+  func testDispatchQueue() {
+    verify(fileName: "DispatchQueue")
+  }
+  
+  private func verify(fileName: String, extension: String? = nil) {
     do {
       guard let url = bundle.url(forResource: fileName, withExtension: `extension`) else {
         XCTFail("File \(fileName + (`extension`.flatMap { ".\($0)" } ?? "")) doesn't exist")
@@ -98,9 +79,8 @@ final class LeakDetectorTests: XCTestCase {
     do {
       let leakDetector = GraphLeakDetector(nonEscapeRules: [
           AnimationRule(),
-          DispatchQueueRule(),
-          FPOperatorsRule()
-        ]
+          DispatchQueueRule()
+        ] + CollectionRules.rules
       )
       let leaks = try leakDetector.detect(content: content)
       let leakAtLines = leaks.map { $0.line }

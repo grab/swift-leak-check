@@ -25,12 +25,15 @@ do {
       print("Scan \(fileUrl)")
       let leakDetector = GraphLeakDetector(nonEscapeRules: [
           AnimationRule(),
-          DispatchQueueRule(),
-          FPOperatorsRule()
-        ]
+          DispatchQueueRule()
+        ] + CollectionRules.rules
       )
       
+      let startDate = Date()
       let leaks = try leakDetector.detect(fileUrl)
+      let endDate = Date()
+      
+      print("Finished in \(endDate.timeIntervalSince(startDate)) seconds")
       
       leaks.forEach { leak in
         print(leak.description)

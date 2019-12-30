@@ -7,7 +7,7 @@
 
 import SwiftSyntax
 
-public enum ScopeNode: Hashable {
+public enum ScopeNode: Hashable, CustomStringConvertible {
   case sourceFileNode(SourceFileSyntax)
   case classNode(ClassDeclSyntax)
   case structNode(StructDeclSyntax)
@@ -17,7 +17,8 @@ public enum ScopeNode: Hashable {
   case funcNode(FunctionDeclSyntax)
   case initialiseNode(InitializerDeclSyntax)
   case closureNode(ClosureExprSyntax)
-  case ifNode(IfStmtSyntax)
+  case ifBlockNode(CodeBlockSyntax, IfStmtSyntax) // If block in a `IfStmtSyntax`
+  case elseBlockNode(CodeBlockSyntax, IfStmtSyntax) // Else block in a `IfStmtSyntax`
   case guardNode(GuardStmtSyntax)
   case forLoopNode(ForInStmtSyntax)
   case whileLoopNode(WhileStmtSyntax)
@@ -56,8 +57,14 @@ public enum ScopeNode: Hashable {
     case let closureNode as ClosureExprSyntax:
       return .closureNode(closureNode)
       
-    case let ifNode as IfStmtSyntax:
-      return .ifNode(ifNode)
+    case let codeBlockNode as CodeBlockSyntax where codeBlockNode.parent is IfStmtSyntax:
+      let parent = codeBlockNode.parent as! IfStmtSyntax
+      if codeBlockNode == parent.body {
+        return .ifBlockNode(codeBlockNode, parent)
+      } else if codeBlockNode == parent.elseBody as? CodeBlockSyntax {
+        return .elseBlockNode(codeBlockNode, parent)
+      }
+      return nil
       
     case let guardNode as GuardStmtSyntax:
       return .guardNode(guardNode)
@@ -98,7 +105,8 @@ public enum ScopeNode: Hashable {
     case .funcNode(let node): return node
     case .initialiseNode(let node): return node
     case .closureNode(let node): return node
-    case .ifNode(let node): return node
+    case .ifBlockNode(let node, _): return node
+    case .elseBlockNode(let node, _): return node
     case .guardNode(let node): return node
     case .forLoopNode(let node): return node
     case .whileLoopNode(let node): return node
@@ -120,7 +128,7 @@ public enum ScopeNode: Hashable {
     case .funcNode: return .funcNode
     case .initialiseNode: return .initialiseNode
     case .closureNode: return .closureNode
-    case .ifNode: return .ifNode
+    case .ifBlockNode, .elseBlockNode: return .ifElseNode
     case .guardNode: return .guardNode
     case .forLoopNode: return .forLoopNode
     case .whileLoopNode: return .whileLoopNode
@@ -129,6 +137,10 @@ public enum ScopeNode: Hashable {
     case .variableDeclNode: return .variableDeclNode
     case .switchCaseNode: return .switchCaseNode
     }
+  }
+  
+  public var description: String {
+    return "\(node)"
   }
 }
 
@@ -142,7 +154,7 @@ public enum ScopeType: Equatable {
   case funcNode
   case initialiseNode
   case closureNode
-  case ifNode
+  case ifElseNode
   case guardNode
   case forLoopNode
   case whileLoopNode
@@ -172,7 +184,9 @@ open class Scope: Hashable, CustomStringConvertible {
     return scopeNode.type
   }
   
-  /// Just the name of the class/struct/enum/extension.
+  /// The name of the class/struct/enum/extension.
+  /// For class/struct/enum, it's 1 element
+  /// For extension, it could be multiple. Eg, extension X.Y.Z {...}
   public var typeDeclOrExtensionTokens: [TokenSyntax]? {
     switch scopeNode {
     case .classNode(let node):
@@ -220,10 +234,6 @@ open class Scope: Hashable, CustomStringConvertible {
     variables.push(variable)
   }
   
-  public func getVariable(_ token: TokenSyntax) -> Variable? {
-    return variables.first(where: { $0.raw.token == token })
-  }
-  
   public func findVariable(_ reference: IdentifierExprSyntax) -> Variable? {
     for variable in variables {
       // Special case: guard let `x` = x
@@ -242,10 +252,10 @@ open class Scope: Hashable, CustomStringConvertible {
     return nil
   }
   
-  public func findFunction(reference: IdentifierExprSyntax) -> [Function] {
+  public func findFunction(_ reference: Symbol) -> [Function] {
     return functions.filter { function in
-      if function.identifier.isBefore(reference) || canUseVariableOrFuncInAnyOrder {
-        return function.identifier.text == reference.identifier.text
+      if function.identifier.isBefore(reference.node) || canUseVariableOrFuncInAnyOrder {
+        return function.identifier.text == reference.name
       }
       return false
     }
@@ -258,35 +268,6 @@ open class Scope: Hashable, CustomStringConvertible {
       }
       return false
     }
-  }
-  
-  /// Get the scope that encloses a given node
-  /// Eg, Scopes that enclose a func could be class, enum,...
-  /// Or scopes that enclose a statement could be func, closure,...
-  /// - Parameter node: A node
-  /// - Returns: The scope that encloses the node
-  public func findEnclosingScope(_ node: Syntax) -> Scope? {
-    guard let scopeNode = node.enclosingScopeNode else {
-      return nil
-    }
-    return findScope(scopeNode)
-  }
-  
-  /// Return the corresponding scope of a node if the node is of scope-type (class, func, closure,...)
-  /// or return the enclosing scope if the node is not scope-type
-  /// - Parameter node: The node
-  public func findScope(_ node: Syntax) -> Scope? {
-    guard let scopeNode = ScopeNode.from(node: node) else {
-      return findEnclosingScope(node)
-    }
-    return findScope(scopeNode)
-  }
-  
-  private func findScope(_ scopeNode: ScopeNode) -> Scope? {
-    if self.scopeNode == scopeNode {
-      return self
-    }
-    return childScopes.lazy.compactMap { return $0.findScope(scopeNode) }.first
   }
   
   open var description: String {

@@ -1,0 +1,37 @@
+class X {
+  func main() {
+    doSmth {
+      self.x
+    }
+  }
+
+  func doSmth(block: @escaping () -> Void) {
+    callBlock1(block)
+    callBlock2(block: block)
+  }
+
+  func callBlock1(_ block: @escaping () -> Void) {
+    UIView.animate(withDuration: 1.0, animations: block)
+  }
+
+  func callBlock2(block b: @escaping () -> Void) {
+    UIView.animate(withDuration: 1.0, animations: b)
+  }
+
+  var x = 1
+}
+
+class Y {
+  let x = 1
+  func main() {
+    _ = getArray()
+      .filter { num in return self.x < num }
+      .map { num in self.x + num }
+      .sorted { (a, b) in a + self.x > b }
+      .flatMap { _ in self.getArray() }
+  }
+
+  func getArray() -> [Int] {
+    return [1, 2, 3]
+  }
+}

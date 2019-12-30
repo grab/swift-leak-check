@@ -1,0 +1,58 @@
+class X {
+  private func main() {
+    UIView.animate(withDuration: voiceDuration) {
+      self.doSmth()
+    }
+
+    UIView.animate(withDuration: 0.3, animations: {
+      self.doSmth()
+    }) { _ in
+      self.doSmth()
+    }
+
+    UIView.animate(withDuration: 0.3, animations: {
+      self.doSmth()
+    }, completion: { _ in
+      self.doSmth()
+    })
+    
+    UIView.animate(withDuration: Double(duration), delay: 0, options: .curveEaseInOut, animations: {
+      self.doSmth()
+    })
+
+    UIView.animate(withDuration: Double(duration), delay: 0, options: .curveEaseInOut, animations: {
+      self.doSmth()
+    }) { _ in
+      self.doSmth()
+    }
+
+    UIView.animate(withDuration: Double(duration), delay: 0, options: .curveEaseInOut, animations: {
+      self.doSmth()
+    }, completion: { _ in
+      self.doSmth()
+    })
+
+    UIView.transition(from: view1, to: view2, duration: 1.0, options: []) { _ in
+      self.doSmth()
+    }
+
+    animateIfNeeded(animated: animated, updateBlock: {
+      self.doSmth()
+    })
+  }
+
+  private func doSmth() {}
+}
+
+extension X {
+  private func animateIfNeeded(animated: Bool, updateBlock: @escaping () -> Void) {
+    if animated {
+      UIView.transition(with: view1, duration: 1.0, options: []) {
+        updateBlock()
+        self.doSmth()
+      }
+    } else {
+      updateBlock()
+    }
+  }
+}

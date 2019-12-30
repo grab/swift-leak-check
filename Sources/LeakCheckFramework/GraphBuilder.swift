@@ -60,6 +60,13 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
         stack.push(scope)
       }
     }
+    
+    #if DEBUG
+    if node is ElseBlockSyntax || node is ElseIfContinuationSyntax {
+      assertionFailure("Unhandled case")
+    }
+    #endif
+    
     super.visitPre(node)
   }
   
@@ -144,7 +151,7 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
   
   override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
-    assert(node.caseKeyword == nil, "Just want to see")
+    assert(node.caseKeyword == nil, "Unhandled case")
     
     guard let scope = stack.peek(), scope.scopeNode.type == .forLoopNode else {
       fatalError()
@@ -158,10 +165,7 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
 }
 
-/// Visit the tree and build a reference graph
-/// 1. Variable (IdentifierExprSyntax) reference
-/// 2. Func reference
-/// 3. Property reference
+/// Visit the tree and resolve references
 private final class ReferenceBuilderVisitor: BaseGraphVistor {
   private let graph: Graph
   init(graph: Graph) {

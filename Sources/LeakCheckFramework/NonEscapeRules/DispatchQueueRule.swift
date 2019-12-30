@@ -7,30 +7,60 @@
 
 import SwiftSyntax
 
-public final class DispatchQueueRule: NonEscapeRule {
+public final class DispatchQueueRule: BaseNonEscapeRule {
   
-  public var namePredicate: ((String) -> Bool)?
+  private let predicates: [ExprSyntaxPredicate]
   
-  public init(namePredicate: ((String) -> Bool)? = nil) {
-    self.namePredicate = namePredicate
+  public init(basePredicate: ((String) -> Bool)? = nil) {
+    self.predicates = {
+      let mainQueuePredicate: ExprSyntaxPredicate = .memberAccess("main", base: .name("DispatchQueue"))
+      let globalQueuePredicate: ExprSyntaxPredicate = .funcCall(
+        FunctionSignature(name: "global", params: [.init(name: "qos", canOmit: true)]),
+        base: .name("DispatchQueue")
+      )
+      
+      let asyncSignature = FunctionSignature(name: "async", params: [
+        FunctionParam(name: "execution", isClosure: true)
+        ])
+      let syncSignature = FunctionSignature(name: "sync", params: [
+        FunctionParam(name: "execution", isClosure: true)
+        ])
+      let asyncAfterSignature = FunctionSignature(name: "asyncAfter", params: [
+        FunctionParam(name: "deadline"),
+        FunctionParam(name: "execution", isClosure: true)
+        ])
+      
+      var predicates = [mainQueuePredicate, globalQueuePredicate].flatMap { base -> [ExprSyntaxPredicate] in
+        return [
+          .funcCall(asyncSignature, base: base),
+          .funcCall(syncSignature, base: base),
+          .funcCall(asyncAfterSignature, base: base)
+        ]
+      }
+      
+      if let basePredicate = basePredicate {
+        predicates.append(contentsOf: [
+          .funcCall(asyncSignature, base: .name(basePredicate)),
+          .funcCall(syncSignature, base: .name(basePredicate)),
+          .funcCall(asyncAfterSignature, base: .name(basePredicate)),
+        ])
+      }
+      
+      return predicates
+    }()
   }
   
-  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
-    return closureNode.isArgumentInFunctionCall(
-      functionNamePredicate: { $0 == "async" || $0 == "sync" || $0 == "asyncAfter" },
-      argumentNamePredicate: { $0 == "execution" },
-      calledExprPredicate: { expr in
-        if let identifierExpr = expr as? IdentifierExprSyntax, let namePredicate = namePredicate {
-          return namePredicate(identifierExpr.identifier.text)
-        } else if let memberAccessExpr = expr as? MemberAccessExprSyntax {
-          return memberAccessExpr.match("DispatchQueue.main")
-        } else if let function = expr as? FunctionCallExprSyntax {
-          if let subExpr = function.calledExpression as? MemberAccessExprSyntax {
-            return subExpr.match("DispatchQueue.global")
-          }
-        }
-        return false
-      })
+  public override func isNonEscape(arg: FunctionCallArgumentSyntax?,
+                                   funcCallExpr: FunctionCallExprSyntax,
+                                   graph: Graph) -> Bool {
+    
+    for predicate in predicates {
+      if funcCallExpr.match(predicate) {
+        return true
+      }
+    }
+    
+    return false
   }
 }
 

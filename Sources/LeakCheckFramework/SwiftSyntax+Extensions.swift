@@ -39,45 +39,21 @@ public extension Syntax {
 }
 
 public extension ExprSyntax {
-  func isArgumentInFunctionCall(functionNamePredicate: (String) -> Bool,
-                                argumentNamePredicate: (String?) -> Bool,
-                                calledExprPredicate: (ExprSyntax?) -> Bool) -> Bool {
-    guard let (functionCall, argument, isTrailing) = getArgumentInfoInFunctionCall() else {
-      // Not argument in function call
-      return false
-    }
-    
-    if !isTrailing {
-      if !argumentNamePredicate(argument?.label?.text) {
-        return false
-      }
-    }
-    
-    if let identifier = functionCall.calledExpression as? IdentifierExprSyntax {
-      return functionNamePredicate(identifier.identifier.text)
-        && calledExprPredicate(nil)
-    } else if let memberAccessExpr = functionCall.calledExpression as? MemberAccessExprSyntax {
-      return functionNamePredicate(memberAccessExpr.name.text)
-        && calledExprPredicate(memberAccessExpr.base)
-    }
-    
-    return false
-  }
-  
-  func getArgumentInfoInFunctionCall() -> (function: FunctionCallExprSyntax, argument: FunctionCallArgumentSyntax?, isTrailing: Bool)? {
+  /// Returns the enclosing function call to which the current expr is passed as argument. We also return the corresponding
+  /// argument of the current expr, or nil if current expr is trailing closure
+  func getEnclosingFunctionCallForArgument() -> (function: FunctionCallExprSyntax, argument: FunctionCallArgumentSyntax?)? {
     var function: FunctionCallExprSyntax?
     var argument: FunctionCallArgumentSyntax?
-    var isTrailing = false
     
     if let parent = parent as? FunctionCallArgumentSyntax { // Normal function argument
       assert(parent.parent is FunctionCallArgumentListSyntax)
       function = parent.parent?.parent as? FunctionCallExprSyntax
       argument = parent
-    } else if let parent = parent as? FunctionCallExprSyntax { // Trailing closure
+    } else if let parent = parent as? FunctionCallExprSyntax,
+      self is ClosureExprSyntax,
+      parent.trailingClosure == self as? ClosureExprSyntax
+    { // Trailing closure
       function = parent
-      isTrailing = true
-      assert(self is ClosureExprSyntax)
-      assert(function?.trailingClosure == self as? ClosureExprSyntax)
     }
     
     guard function != nil else {
@@ -85,14 +61,10 @@ public extension ExprSyntax {
       return nil
     }
     
-    return (function: function!, argument: argument, isTrailing: isTrailing)
+    return (function: function!, argument: argument)
   }
   
-  // Eg: the closure below is in FunctionCallExpr
-  // let x = {
-  // ...
-  // }()
-  func isFunctionCallExpr() -> Bool {
+  func isCalledExpr() -> Bool {
     if let parentNode = parent as? FunctionCallExprSyntax {
       if parentNode.calledExpression == self {
         return true
@@ -103,13 +75,6 @@ public extension ExprSyntax {
   }
   
   var rangeInfo: (left: ExprSyntax?, op: TokenSyntax, right: ExprSyntax?)? {
-    if let tuple = self as? TupleExprSyntax {
-      guard tuple.elementList.count == 1 else {
-        return nil
-      }
-      return tuple.elementList[0].expression.rangeInfo
-    }
-    
     if let expr = self as? SequenceExprSyntax {
       guard expr.elements.count == 3, let op = expr.elements[1].rangeOperator else {
         return nil
@@ -137,10 +102,6 @@ public extension ExprSyntax {
     return nil
   }
   
-  var isRange: Bool {
-    return rangeInfo != nil
-  }
-  
   private var rangeOperator: TokenSyntax? {
     guard let op = self as? BinaryOperatorExprSyntax else {
       return nil
@@ -152,30 +113,6 @@ public extension ExprSyntax {
 public extension TokenSyntax {
   var isRangeOperator: Bool {
     return text == "..." || text == "..<"
-  }
-}
-
-public extension MemberAccessExprSyntax {
-
-  /// Eg: match("DispatchQueue.main.async")
-  func match(_ pattern: String) -> Bool {
-    let components = pattern.components(separatedBy: ".")
-    return match(components)
-  }
-  
-  private func match(_ components: [String]) -> Bool {
-    assert(components.count > 0)
-    if name.text != components.last {
-      return false
-    }
-    
-    if components.count == 1 {
-      return base == nil
-    } else if components.count == 2 {
-      return (base as? IdentifierExprSyntax)?.identifier.text == components[0]
-    } else {
-      return (base as? MemberAccessExprSyntax)?.match(Array(components.dropLast())) == true
-    }
   }
 }
 
@@ -220,10 +157,15 @@ public extension OptionalBindingConditionSyntax {
 }
 
 public extension FunctionCallExprSyntax {
-  var baseAndSymbol: (base: ExprSyntax?, symbol: TokenSyntax)? {
-    return calledExpression.baseAndSymbol
+  var base: ExprSyntax? {
+    return calledExpression.baseAndSymbol?.base
+  }
+  
+  var symbol: TokenSyntax? {
+    return calledExpression.baseAndSymbol?.symbol
   }
 }
+
 // Only used for the FunctionCallExprSyntax extension above
 private extension ExprSyntax {
   var baseAndSymbol: (base: ExprSyntax?, symbol: TokenSyntax)? {
@@ -231,8 +173,7 @@ private extension ExprSyntax {
       return (base: nil, symbol: identifier.identifier)
     }
     if let memberAccessExpr = self as? MemberAccessExprSyntax {
-      return (base: (memberAccessExpr.base as? IdentifierExprSyntax),
-              symbol: memberAccessExpr.name)
+      return (base: memberAccessExpr.base, symbol: memberAccessExpr.name)
     }
     if let implicitMemberExpr = self as? ImplicitMemberExprSyntax {
       return (base: nil, symbol: implicitMemberExpr.name)
@@ -243,7 +184,7 @@ private extension ExprSyntax {
     if self is SpecializeExprSyntax {
       return nil
     }
-    assert(false, "Not sure how it looks like")
+    assert(false, "Unhandled case")
     return nil
   }
 }

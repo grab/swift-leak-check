@@ -1,12 +1,12 @@
 class AClass {
   var x = 1
-  func test() {
-    let b = BClass()
+  
+  func main() {
     let block = { [weak self] in
       guard let strongSelf = self else { return }
       strongSelf.x = strongSelf.x + 1
       weak var strongSelf2 = strongSelf
-      b.doSmth {
+      someObject.doSmth {
         guard let `self` = self else { return }
         self.x = 1
         guard let strongSelf2 = strongSelf2 else { return }
@@ -18,22 +18,20 @@ class AClass {
       }
     }
 
-    b.doSmth(completion: block)
+    // So this `block` will be evaluated as escaping
+    someObject.doSmth(block)
 
-    let nonEscapeBlock = {
-      // self.x += 1 // TODO
+    doSmth(tuple: (
+        value: 1,
+        closure: {
+          self.x // Leak
+        }
+      ),
+      output: self
+    )
+
+    doSmth { [unowned self] in
+      self.x
     }
-    b.doNonEscapeBlock(nonEscapeBlock)
   }
 }
-
-class BClass {
-  var completion: (() -> Void)?
-  func doSmth(completion: @escaping () -> Void) {
-    self.completion = completion
-  }
-  func doNonEscapeBlock(_ block: () -> Void) {
-    block()
-  }
-}
-

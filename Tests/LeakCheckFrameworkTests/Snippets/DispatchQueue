@@ -1,0 +1,41 @@
+class X {
+  func main() {
+    DispatchQueue.main.async {
+      self.doSmth()
+    }
+
+    DispatchQueue.main.async(execution: {
+      self.doSmth()
+    })
+
+    DispatchQueue.main.sync {
+      self.doSmth()
+    }
+
+    DispatchQueue.main.sync(execution: {
+      self.doSmth()
+    })
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+      self.doSmth()
+    }
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execution: {
+      self.doSmth()
+    })
+
+    DispatchQueue.global().async {
+      self.doSmth()
+    }
+
+    DispatchQueue.global().async(execution: {
+      self.doSmth()
+    })
+
+    DispatchQueue.global(qos: .background).sync {
+      self.doSmth()
+    }
+  }
+
+  func doSmth() {}
+}

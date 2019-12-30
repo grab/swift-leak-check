@@ -1,0 +1,39 @@
+class AClass {
+  func main() {
+    let nonEscapeBlock = {
+      self.x += 1
+    }
+    let b = BClass()
+    b.doNonEscapeBlock(nonEscapeBlock)
+    b.doAnotherNonEscapeBlock(nonEscapeBlock)
+
+    let escapeBlock = {
+      self.x += 1 // Leak
+    }
+
+    b.doSmth(escapeBlock)
+  }
+
+  var x = 1
+  var y = [1, 2, 3]
+}
+
+class BClass {
+  var completion: (() -> Void)?
+
+  func doSmth(_ completion: @escaping () -> Void) {
+    self.completion = completion
+  }
+
+  func doNonEscapeBlock(_ block: () -> Void) {
+    block()
+  }
+
+  func doAnotherNonEscapeBlock(_ block: () -> Void) {
+    _ = AClass().y.map { val in
+      block()
+      return val
+    }
+  }
+}
+

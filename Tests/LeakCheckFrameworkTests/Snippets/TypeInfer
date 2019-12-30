@@ -1,0 +1,97 @@
+class X {
+  let x: Int = 1
+
+  func typeInferFromClosureParams() {
+    let block: ([Int], String?, C) -> Void = { [weak self] a, b, c in
+      guard let strongSelf = self else { return }
+      a.map { val in
+        strongSelf.x
+      }
+      b.map {
+        strongSelf.x
+      }
+      c.map {
+        strongSelf.x // Leak
+      }
+    }
+  }
+
+  func typeInferFromTupleClosure() {
+    let (a, b) = (
+      closure1: {
+        self.x
+      },
+      closure2: {
+        self.x // Leak
+      }
+    )
+
+    a()
+    
+    b()
+    doSmthWithCallback(b)
+  }
+
+  func typeInferFromTuple() {
+    var (a, b) = ([1, 2], [1: "x", 2: "y"])
+    a.sort(by: { (val1, val2) in
+      return val1 + self.x > val2
+    })
+
+    b.filter { (key, val) in
+      return key > self.x
+    }
+  }
+
+  func explicitType() {
+    var a: [Int]!
+    a.map {
+      self.x
+    }
+  }
+
+  func range() {
+    _ = (0...10).filter { val in
+      val > self.x
+    }
+
+    _ = (0...).filter { val in
+      val > self.x
+    }
+    
+    _ = (0..<10).filter { val in
+      val > self.x
+    }
+
+    var a: [Int]!
+    a[..<5].filter { val in
+      val > self.x
+    }
+  }
+
+  func nestedArray() {
+    var arr: [[Int]]!
+    for a in arr {
+      a.map { val in
+        self.x + val
+      }
+    }
+    arr.map { a in
+      a.map { val in
+        self.x + val
+      }
+    }
+
+    var arr2 = [[1,2], [3, 4]]
+    for a in arr2 {
+      a.map { val in
+        self.x + val
+      }
+    }
+    arr2.map { a in
+      a.map { val in
+        self.x + val
+      }
+    }
+  }
+}
