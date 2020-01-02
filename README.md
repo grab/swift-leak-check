@@ -194,11 +194,12 @@ To overcome that, you can define custom rules which have logic to classify a clo
 
 # Non-escaping rules
 
-By default, we already did most of the legworks trying to determine if a closure is non-escaping (Refer to #2 of `How it works` section)
+By default, we already did most of the legworks trying to determine if a closure is non-escaping (See #2 of `How it works` section)
+
 But in some cases, there's just not enough information in the source file. 
 For eg, we know that a closure passed to `DispatchQueue.main.async` will be executed and gone very soon, hence it's safe to treat it as non-escaping. But the `DispatchQueue` code is not defined in the current source file, thus we don't have any information about it.
-The solution for this is to define a non-escaping rule. A non-escaping rule is a piece of code that takes in a closure expression and tells us whether the closure is escaping or non-escaping.
 
+The solution for this is to define a non-escaping rule. A non-escaping rule is a piece of code that takes in a closure expression and tells us whether the closure is non-escaping or not.
 To define a non-escaping rule, extend from `BaseNonEscapeRule`  and override `func isNonEscape(arg: FunctionCallArgumentSyntax,....) -> Bool`
 
 Here's a rule that matches `DispatchQueue.main.async` or `DispatchQueue.global(qos:).asyncAfter` :
@@ -236,7 +237,7 @@ open class DispatchQueueRule: NonEscapeRule {
 }
 ```
 
-Here's another example of `UIView.animate(withDurations: animations:)` rule:
+Here's another example of rule that matches `UIView.animate(withDurations: animations:)`:
 
 ```swift
 open class UIViewAnimationRule: BaseNonEscapeRule {
@@ -252,7 +253,7 @@ open class UIViewAnimationRule: BaseNonEscapeRule {
 }
 ```
 
-After creating the non-escaping rule,  pass it to the leak detector:
+After creating the non-escaping rule, pass it to the leak detector:
 
 ```swift
 let leakDetector = GraphLeakDetector(nonEscapingRules: [DispatchQueueRule(), UIViewAnimationRule()])
@@ -260,7 +261,7 @@ let leakDetector = GraphLeakDetector(nonEscapingRules: [DispatchQueueRule(), UIV
 
 # Predefined non-escaping rules
 
-We have built some non-escaping rules that are ready to be used. 
+There're some ready-to-be-used non-escaping rules:
 
 **1. DispatchQueueRule**
 
