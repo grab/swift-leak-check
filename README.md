@@ -34,7 +34,7 @@ For second leak, although `self` is captured weakly by the inner closure, but `s
 
 # Usage
 
-There're 2 ways to use this tool: the fastest way is to use the provided SwiftLeakChecker target and start detecting leaks in your code, or you can drop the LeakCheckFramework in your code
+There're 2 ways to use this tool: the fastest way is to use the provided SwiftLeakChecker target and start detecting leaks in your code, or you can drop the SwiftLeakCheck framework in your code
 and start building your own tool
 
 ### SwiftLeakChecker
@@ -73,17 +73,17 @@ let package = Package(
     .package(url: "This repo .git url", .exact("package version")),
   ],
   targets: [
-    .target(name: "MyAwesomeLeakDetector", dependencies: ["LeakCheckFramework"]),
+    .target(name: "MyAwesomeLeakDetector", dependencies: ["SwiftLeakCheck"]),
   ]
 )
 ```
 
-Then, import `LeakCheckFramework` in your Swift code
+Then, import `SwiftLeakCheck` in your Swift code
 
 To create a leak detector and start detecting: 
 
 ```swift
-import LeakCheckFramework
+import SwiftLeakCheck
 
 let url = URL(fileURLWithPath: "absolute/path/to/your/swift/file/or/folder")
 let detector = GraphLeakDetector()
@@ -213,26 +213,35 @@ open class DispatchQueueRule: NonEscapeRule {
       FunctionParam(name: "execute", isClosure: true)
     ])
     
+    // Predicate to match DispatchQueue.main
+    let mainQueuePredicate = ExprSyntaxPredicate.memberAccess("main", base: ExprSyntaxPredicate.name("DispatchQueue"))
+    
+    let mainQueueAsyncPredicate = ExprSyntaxPredicate.funcCall(asyncSignature, base: mainQueuePredicate)
+    if funcCallExpr.match(mainQueueAsyncPredicate) { // Matched DispatchQueue.main.async(...)
+        return true
+    }
+    
     // Signature of `asyncAfter` function
     let asyncAfterSignature = FunctionSignature(name: "asyncAfter", params: [
       FunctionParam(name: "deadline"),
       FunctionParam(name: "execute", isClosure: true)
     ]) 
     
-    // Predicate to match DispatchQueue.main
-    let mainPredicate = ExprSyntaxPredicate.memberAccess("main", base: ExprSyntaxPredicate.name("DispatchQueue"))
-    
-    // Predicate to match DispatchQueue.global(qos: ...)
-    let globalPredicate = ExprSyntaxPredicate.funcCall(
+    // Predicate to match DispatchQueue.global(qos: ...) or DispatchQueue.global()
+    let globalQueuePredicate = ExprSyntaxPredicate.funcCall(
       FunctionSignature(name: "global", params: [
         FunctionParam(name: "qos", canOmit: true)
         ]),
       base: ExprSyntaxPredicate.name("DispatchQueue")
     )
     
-    return 
-      funcCallExpr.match(ExprSyntaxPredicate.funcCall(asyncSignature, base: mainPredicate))
-      || functionCallExpr.match(ExprSyntaxPredicate.funcCall(asyncAfterSignature, base: globalPredicate))
+    let globalQueueAsyncAfterPredicate = ExprSyntaxPredicate.funcCall(asyncAfterSignature, base: globalQueuePredicate)
+    if funcCallExpr.match(globalQueueAsyncAfterPredicate) {
+        return true
+    }
+    
+    // Doesn't match either function
+    return false
   }
 }
 ```
