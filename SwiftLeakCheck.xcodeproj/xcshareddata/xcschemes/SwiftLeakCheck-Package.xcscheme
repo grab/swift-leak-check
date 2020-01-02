@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LeakCheckFramework::LeakCheckFramework"
-               BuildableName = "LeakCheckFramework.framework"
-               BlueprintName = "LeakCheckFramework"
-               ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
+               BlueprintIdentifier = "SwiftLeakCheck::SwiftLeakChecker"
+               BuildableName = "SwiftLeakChecker"
+               BlueprintName = "SwiftLeakChecker"
+               ReferencedContainer = "container:SwiftLeakCheck.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -28,10 +28,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LeakCheckFramework::SwiftLeakChecker"
-               BuildableName = "SwiftLeakChecker"
-               BlueprintName = "SwiftLeakChecker"
-               ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
+               BlueprintIdentifier = "SwiftLeakCheck::SwiftLeakCheck"
+               BuildableName = "SwiftLeakCheck.framework"
+               BlueprintName = "SwiftLeakCheck"
+               ReferencedContainer = "container:SwiftLeakCheck.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,10 +46,10 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LeakCheckFramework::LeakCheckFrameworkTests"
-               BuildableName = "LeakCheckFrameworkTests.xctest"
-               BlueprintName = "LeakCheckFrameworkTests"
-               ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
+               BlueprintIdentifier = "SwiftLeakCheck::SwiftLeakCheckTests"
+               BuildableName = "SwiftLeakCheckTests.xctest"
+               BlueprintName = "SwiftLeakCheckTests"
+               ReferencedContainer = "container:SwiftLeakCheck.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -69,10 +69,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "LeakCheckFramework::LeakCheckFramework"
-            BuildableName = "LeakCheckFramework.framework"
-            BlueprintName = "LeakCheckFramework"
-            ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
+            BlueprintIdentifier = "SwiftLeakCheck::SwiftLeakChecker"
+            BuildableName = "SwiftLeakChecker"
+            BlueprintName = "SwiftLeakChecker"
+            ReferencedContainer = "container:SwiftLeakCheck.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>

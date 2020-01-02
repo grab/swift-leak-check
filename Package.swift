@@ -8,9 +8,9 @@
 import PackageDescription
 
 let package = Package(
-    name: "LeakCheckFramework",
+    name: "SwiftLeakCheck",
     products: [
-      .library(name: "LeakCheckFramework", targets: ["LeakCheckFramework"]),
+      .library(name: "SwiftLeakCheck", targets: ["SwiftLeakCheck"]),
       .executable(name: "SwiftLeakChecker", targets: ["SwiftLeakChecker"])
     ],
     dependencies: [
@@ -25,19 +25,19 @@ let package = Package(
         .target(
           name: "SwiftLeakChecker",
           dependencies: [
-            "LeakCheckFramework"
+            "SwiftLeakCheck"
           ]
         ),
         .target(
-          name: "LeakCheckFramework",
+          name: "SwiftLeakCheck",
           dependencies: [
             "SourceKittenFramework",
             "SwiftSyntax"
           ]
         ),
         .testTarget(
-          name: "LeakCheckFrameworkTests",
-          dependencies: ["LeakCheckFramework"]
+          name: "SwiftLeakCheckTests",
+          dependencies: ["SwiftLeakCheck"]
         )
     ]
 )
