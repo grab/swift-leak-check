@@ -1,0 +1,22 @@
+class A {
+  class B {
+    var x = 1
+    func main() {
+      // This should be resolved to the `func doSmth` defined in extension A.B
+      doSmth {
+        self.x
+      }
+    }
+  }
+
+  func doSmth(block: @escaping () -> Void) {
+    someObject.callBlock(block)
+  }
+}
+
+extension A.B {
+  func doSmth(block: () -> Void) {
+    block()
+  }
+}
+

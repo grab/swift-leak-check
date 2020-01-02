@@ -2,12 +2,15 @@
 //  DispatchQueueRule.swift
 //  LeakCheckFramework
 //
+//  Copyright 2019 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
+//  Use of this source code is governed by an MIT-style license that can be found in the LICENSE file
+//
 //  Created by Hoang Le Pham on 28/10/2019.
 //
 
 import SwiftSyntax
 
-public final class DispatchQueueRule: BaseNonEscapeRule {
+open class DispatchQueueRule: BaseNonEscapeRule {
   
   private let predicates: [ExprSyntaxPredicate]
   
@@ -20,14 +23,14 @@ public final class DispatchQueueRule: BaseNonEscapeRule {
       )
       
       let asyncSignature = FunctionSignature(name: "async", params: [
-        FunctionParam(name: "execution", isClosure: true)
+        FunctionParam(name: "execute", isClosure: true)
         ])
       let syncSignature = FunctionSignature(name: "sync", params: [
-        FunctionParam(name: "execution", isClosure: true)
+        FunctionParam(name: "execute", isClosure: true)
         ])
       let asyncAfterSignature = FunctionSignature(name: "asyncAfter", params: [
         FunctionParam(name: "deadline"),
-        FunctionParam(name: "execution", isClosure: true)
+        FunctionParam(name: "execute", isClosure: true)
         ])
       
       var predicates = [mainQueuePredicate, globalQueuePredicate].flatMap { base -> [ExprSyntaxPredicate] in
@@ -50,9 +53,9 @@ public final class DispatchQueueRule: BaseNonEscapeRule {
     }()
   }
   
-  public override func isNonEscape(arg: FunctionCallArgumentSyntax?,
-                                   funcCallExpr: FunctionCallExprSyntax,
-                                   graph: Graph) -> Bool {
+  open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
+                                 funcCallExpr: FunctionCallExprSyntax,
+                                 graph: Graph) -> Bool {
     
     for predicate in predicates {
       if funcCallExpr.match(predicate) {

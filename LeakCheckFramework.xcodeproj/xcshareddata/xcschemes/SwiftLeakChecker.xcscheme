@@ -62,15 +62,49 @@
             ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Users/hoang.le/Projects/pax-ios/src/CX/Platform/Bootstrap/AppDelegate/AppDelegateExtension.swift"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/hoang.le/Projects/pax-ios/src/CX/Platform/Bootstrap/RootRib/RootInteractor.swift"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/hoang.le/Projects/pax-ios/src/CX/Platform/Bootstrap/RootRib/RootViewController.swift"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/hoang.le/Projects/pax-ios/src/CX/Platform/Bootstrap/RootRib/RootRouter.swift"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release"
-      shouldUseLaunchSchemeArgsEnv = "YES"
+      buildConfiguration = "Debug"
+      shouldUseLaunchSchemeArgsEnv = "NO"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "LeakCheckFramework::SwiftLeakChecker"
+            BuildableName = "SwiftLeakChecker"
+            BlueprintName = "SwiftLeakChecker"
+            ReferencedContainer = "container:LeakCheckFramework.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Users/hoang.le/Projects/pax-ios/src/CX/Platform/Bootstrap/AppDelegate/AppDelegateExtension.swift"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

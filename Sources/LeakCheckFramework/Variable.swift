@@ -2,6 +2,9 @@
 //  Variable.swift
 //  LeakCheck
 //
+//  Copyright 2019 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
+//  Use of this source code is governed by an MIT-style license that can be found in the LICENSE file
+//
 //  Created by Hoang Le Pham on 27/10/2019.
 //
 
@@ -29,7 +32,7 @@ public enum RawVariable {
 public class Variable: Hashable, CustomStringConvertible {
   public let raw: RawVariable
   public var name: String { return raw.token.text }
-  public let typeInfo: TypeInfo
+  let typeInfo: TypeInfo
   public let memoryAttribute: MemoryAttribute?
   public let scope: Scope
   

@@ -2,6 +2,9 @@
 //  Scope.swift
 //  LeakCheck
 //
+//  Copyright 2019 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
+//  Use of this source code is governed by an MIT-style license that can be found in the LICENSE file
+//
 //  Created by Hoang Le Pham on 27/10/2019.
 //
 
@@ -139,6 +142,10 @@ public enum ScopeNode: Hashable, CustomStringConvertible {
     }
   }
   
+  public var enclosingScopeNode: ScopeNode? {
+    return node.enclosingScopeNode
+  }
+  
   public var description: String {
     return "\(node)"
   }
@@ -162,6 +169,21 @@ public enum ScopeType: Equatable {
   case accessorNode
   case variableDeclNode
   case switchCaseNode
+  
+  public var isTypeDecl: Bool {
+    return self == .classNode
+      || self == .structNode
+      || self == .enumNode
+      || self == .extensionNode
+  }
+  
+  public var isFunction: Bool {
+    return self == .funcNode
+      || self == .initialiseNode
+      || self == .closureNode
+      || self == .subscriptNode
+  }
+  
 }
 
 open class Scope: Hashable, CustomStringConvertible {
@@ -169,7 +191,6 @@ open class Scope: Hashable, CustomStringConvertible {
   public let parent: Scope?
   public private(set) var variables = Stack<Variable>()
   public private(set) var childScopes = [Scope]()
-  
   public var functions: [Function] {
     return childScopes
       .compactMap { scope in
@@ -180,43 +201,37 @@ open class Scope: Hashable, CustomStringConvertible {
       }
   }
   
-  public var scopeType: ScopeType {
+  public var type: ScopeType {
     return scopeNode.type
   }
   
-  /// The name of the class/struct/enum/extension.
-  /// For class/struct/enum, it's 1 element
-  /// For extension, it could be multiple. Eg, extension X.Y.Z {...}
-  public var typeDeclOrExtensionTokens: [TokenSyntax]? {
+  public var typeDecl: TypeDecl? {
     switch scopeNode {
     case .classNode(let node):
-      return [node.identifier]
+      return TypeDecl(
+        tokens: [node.identifier],
+        inheritanceTypes: node.inheritanceClause?.inheritedTypeCollection.map { $0 },
+        scope: self
+      )
     case .structNode(let node):
-      return [node.identifier]
+      return TypeDecl(tokens: [node.identifier], inheritanceTypes: nil, scope: self)
     case .enumNode(let node):
-      return [node.identifier]
+      return TypeDecl(tokens: [node.identifier], inheritanceTypes: nil, scope: self)
     case .extensionNode(let node):
-      return node.extendedType.tokens
+      return TypeDecl(tokens: node.extendedType.tokens!, inheritanceTypes: nil, scope: self)
     default:
       return nil
     }
   }
   
-  public var isFunction: Bool {
-    return scopeType == .funcNode
-      || scopeType == .initialiseNode
-      || scopeType == .closureNode
-      || scopeType == .subscriptNode
-  }
-  
   // Whether a variable can be used before it's declared. This is true for node that defines type, such as class, struct, enum,....
   // Otherwise if a variable is inside func, or closure, or normal block (if, guard,..), it must be declared before being used
   public var canUseVariableOrFuncInAnyOrder: Bool {
-    return scopeType == .classNode
-      || scopeType == .structNode
-      || scopeType == .enumNode
-      || scopeType == .extensionNode
-      || scopeType == .sourceFileNode
+    return type == .classNode
+      || type == .structNode
+      || type == .enumNode
+      || type == .extensionNode
+      || type == .sourceFileNode
   }
   
   public init(scopeNode: ScopeNode, parent: Scope?) {
@@ -261,13 +276,12 @@ open class Scope: Hashable, CustomStringConvertible {
     }
   }
   
-  public func findTypeDeclOrExtension(name: String) -> [Scope] {
-    return childScopes.filter { scope in
-      if let tokens = scope.typeDeclOrExtensionTokens {
-        return tokens.count == 1 && tokens[0].text == name
+  public func findTypeDecl(name: String) -> [TypeDecl] {
+    return childScopes
+      .compactMap { $0.typeDecl }
+      .filter { typeDecl in
+        return typeDecl.tokens.count == 1 && typeDecl.tokens[0].text == name
       }
-      return false
-    }
   }
   
   open var description: String {
@@ -284,6 +298,19 @@ extension Scope {
   public static func == (_ lhs: Scope, _ rhs: Scope) -> Bool {
     return lhs.scopeNode == rhs.scopeNode
   }
+}
+
+// Class, struct, enum or extension
+public struct TypeDecl: Equatable {
+  /// The name of the class/struct/enum/extension.
+  /// For class/struct/enum, it's 1 element
+  /// For extension, it could be multiple. Eg, extension X.Y.Z {...}
+  public let tokens: [TokenSyntax]
+  
+  // Only for class
+  public let inheritanceTypes: [InheritedTypeSyntax]?
+  
+  public let scope: Scope
 }
 
 extension Syntax {

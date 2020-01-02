@@ -1,0 +1,20 @@
+class SomeViewController: UIViewController {
+  func main() {
+    let vc = UIViewController(nibName: nil, bundle: nil)
+
+    present(vc, animated: true, completion: {
+      self.doSmth()
+    })
+
+    self.present(vc, animated: true) {
+      self.doSmth()
+    }
+
+    // TODO
+    // vc.dismiss(animated: true) {
+    //   self.doSmth()
+    //}
+  }
+
+  func doSmth() {}
+}

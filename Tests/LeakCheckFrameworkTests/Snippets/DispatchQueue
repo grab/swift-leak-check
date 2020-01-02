@@ -4,7 +4,7 @@ class X {
       self.doSmth()
     }
 
-    DispatchQueue.main.async(execution: {
+    DispatchQueue.main.async(execute: {
       self.doSmth()
     })
 
@@ -12,7 +12,7 @@ class X {
       self.doSmth()
     }
 
-    DispatchQueue.main.sync(execution: {
+    DispatchQueue.main.sync(execute: {
       self.doSmth()
     })
 
@@ -20,7 +20,7 @@ class X {
       self.doSmth()
     }
 
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execution: {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
       self.doSmth()
     })
 
@@ -28,7 +28,7 @@ class X {
       self.doSmth()
     }
 
-    DispatchQueue.global().async(execution: {
+    DispatchQueue.global().async(execute: {
       self.doSmth()
     })
 

@@ -2,6 +2,9 @@
 //  LeakDetectorTests.swift
 //  LeakCheckFrameworkTests
 //
+//  Copyright 2019 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
+//  Use of this source code is governed by an MIT-style license that can be found in the LICENSE file
+//
 //  Created by Hoang Le Pham on 27/10/2019.
 //
 
@@ -25,8 +28,12 @@ final class LeakDetectorTests: XCTestCase {
     verify(fileName: "NonEscapingClosure")
   }
   
-  func testUIKitAnimation() {
-    verify(fileName: "Animation")
+  func testUIViewAnimation() {
+    verify(fileName: "UIViewAnimation")
+  }
+  
+  func testUIViewControllerAnimation() {
+    verify(fileName: "UIViewControllerAnimation")
   }
   
   func testEscapingAttribute() {
@@ -51,6 +58,10 @@ final class LeakDetectorTests: XCTestCase {
   
   func testDispatchQueue() {
     verify(fileName: "DispatchQueue")
+  }
+  
+  func testExtensions() {
+    verify(fileName: "Extensions")
   }
   
   private func verify(fileName: String, extension: String? = nil) {
@@ -78,7 +89,8 @@ final class LeakDetectorTests: XCTestCase {
     
     do {
       let leakDetector = GraphLeakDetector(nonEscapeRules: [
-          AnimationRule(),
+          UIViewAnimationRule(),
+          UIViewControllerAnimationRule(),
           DispatchQueueRule()
         ] + CollectionRules.rules
       )

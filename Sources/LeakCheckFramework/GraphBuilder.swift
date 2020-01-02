@@ -2,6 +2,9 @@
 //  GraphBuilder.swift
 //  LeakCheckFramework
 //
+//  Copyright 2019 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
+//  Use of this source code is governed by an MIT-style license that can be found in the LICENSE file
+//
 //  Created by Hoang Le Pham on 29/10/2019.
 //
 
@@ -87,11 +90,11 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   // }
   // Not sure if it's Swift bug
   override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
-    guard let scope = stack.peek(), scope.isFunction || scope.scopeNode.type == .enumCaseNode else {
+    guard let scope = stack.peek(), scope.type.isFunction || scope.type == .enumCaseNode else {
       fatalError()
     }
     guard let name = node.secondName ?? node.firstName else {
-      assert(scope.scopeNode.type == .enumCaseNode)
+      assert(scope.type == .enumCaseNode)
       return .visitChildren
     }
     
@@ -142,7 +145,7 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
     }
     
     let isGuardCondition = node.isGuardCondition()
-    assert(!isGuardCondition || scope.scopeNode.type == .guardNode)
+    assert(!isGuardCondition || scope.type == .guardNode)
     let scopeThatOwnVariable = (isGuardCondition ? scope.parent! : scope)
     if let variable = Variable.from(node, scope: scopeThatOwnVariable) {
       scopeThatOwnVariable.addVariable(variable)
@@ -153,7 +156,7 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
     assert(node.caseKeyword == nil, "Unhandled case")
     
-    guard let scope = stack.peek(), scope.scopeNode.type == .forLoopNode else {
+    guard let scope = stack.peek(), scope.type == .forLoopNode else {
       fatalError()
     }
     
@@ -180,6 +183,6 @@ private final class ReferenceBuilderVisitor: BaseGraphVistor {
 
 private extension Scope {
   var isClosure: Bool {
-    return scopeNode.type == .closureNode
+    return type == .closureNode
   }
 }

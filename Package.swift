@@ -1,5 +1,9 @@
 // swift-tools-version:4.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
+//
+//  Copyright 2019 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
+//  Use of this source code is governed by an MIT-style license that can be found in the LICENSE file
+//
 
 import PackageDescription
 

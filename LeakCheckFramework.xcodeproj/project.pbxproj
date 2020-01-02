@@ -24,7 +24,9 @@
 		FC478F3223B856D20076252B /* TypeInfer in Resources */ = {isa = PBXBuildFile; fileRef = FC478F3123B856D20076252B /* TypeInfer */; };
 		FC478F3423B85A670076252B /* NonEscapingClosure in Resources */ = {isa = PBXBuildFile; fileRef = FC478F3323B85A670076252B /* NonEscapingClosure */; };
 		FC478F3A23B89CC80076252B /* TypeResolve in Resources */ = {isa = PBXBuildFile; fileRef = FC478F3923B89CC80076252B /* TypeResolve */; };
-		FC62B44523B4B18700CFA9F5 /* Animation in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* Animation */; };
+		FC478F3D23B9E72F0076252B /* UIViewControllerAnimationRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC478F3B23B9BB8B0076252B /* UIViewControllerAnimationRule.swift */; };
+		FC478F3F23B9ED5A0076252B /* Extensions in Resources */ = {isa = PBXBuildFile; fileRef = FC478F3E23B9ED5A0076252B /* Extensions */; };
+		FC62B44523B4B18700CFA9F5 /* UIViewAnimation in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* UIViewAnimation */; };
 		FC62B44723B4B18700CFA9F5 /* Leak1 in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* Leak1 */; };
 		FC62B44823B4B18700CFA9F5 /* Leak2 in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Leak2 */; };
 		FC62B44923B4B18700CFA9F5 /* NestedClosure in Resources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* NestedClosure */; };
@@ -33,6 +35,7 @@
 		FC62B46D23B6087700CFA9F5 /* IfElse in Resources */ = {isa = PBXBuildFile; fileRef = FC62B46C23B6087700CFA9F5 /* IfElse */; };
 		FC62B46F23B60E3F00CFA9F5 /* FuncResolve in Resources */ = {isa = PBXBuildFile; fileRef = FC62B46E23B60E3F00CFA9F5 /* FuncResolve */; };
 		FC62B47123B6147500CFA9F5 /* DispatchQueue in Resources */ = {isa = PBXBuildFile; fileRef = FC62B47023B6147500CFA9F5 /* DispatchQueue */; };
+		FCFB581723BD947E00E1CFA1 /* UIViewControllerAnimation in Resources */ = {isa = PBXBuildFile; fileRef = FCFB581623BD933B00E1CFA1 /* UIViewControllerAnimation */; };
 		OBJ_195 /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_113 /* api.c */; };
 		OBJ_196 /* emitter.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_114 /* emitter.c */; };
 		OBJ_197 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_115 /* parser.c */; };
@@ -58,9 +61,8 @@
 		OBJ_231 /* GraphBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* GraphBuilder.swift */; };
 		OBJ_232 /* GraphLeakDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* GraphLeakDetector.swift */; };
 		OBJ_233 /* Leak.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Leak.swift */; };
-		OBJ_234 /* LeakCheckFramework.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* LeakCheckFramework.swift */; };
 		OBJ_235 /* LeakDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* LeakDetector.swift */; };
-		OBJ_236 /* AnimationRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* AnimationRule.swift */; };
+		OBJ_236 /* UIViewAnimationRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* UIViewAnimationRule.swift */; };
 		OBJ_237 /* DispatchQueueRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* DispatchQueueRule.swift */; };
 		OBJ_238 /* CollectionRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* CollectionRules.swift */; };
 		OBJ_239 /* NonEscapeRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_23 /* NonEscapeRule.swift */; };
@@ -415,11 +417,14 @@
 		FC478F3123B856D20076252B /* TypeInfer */ = {isa = PBXFileReference; lastKnownFileType = text; path = TypeInfer; sourceTree = "<group>"; };
 		FC478F3323B85A670076252B /* NonEscapingClosure */ = {isa = PBXFileReference; lastKnownFileType = text; path = NonEscapingClosure; sourceTree = "<group>"; };
 		FC478F3923B89CC80076252B /* TypeResolve */ = {isa = PBXFileReference; lastKnownFileType = text; path = TypeResolve; sourceTree = "<group>"; };
+		FC478F3B23B9BB8B0076252B /* UIViewControllerAnimationRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewControllerAnimationRule.swift; sourceTree = "<group>"; };
+		FC478F3E23B9ED5A0076252B /* Extensions */ = {isa = PBXFileReference; lastKnownFileType = text; path = Extensions; sourceTree = "<group>"; };
 		FC62B46723B4B1C200CFA9F5 /* EscapingAttribute */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EscapingAttribute; sourceTree = "<group>"; };
 		FC62B46A23B4FF0C00CFA9F5 /* ExprSyntaxPredicate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExprSyntaxPredicate.swift; sourceTree = "<group>"; };
 		FC62B46C23B6087700CFA9F5 /* IfElse */ = {isa = PBXFileReference; lastKnownFileType = text; path = IfElse; sourceTree = "<group>"; };
 		FC62B46E23B60E3F00CFA9F5 /* FuncResolve */ = {isa = PBXFileReference; lastKnownFileType = text; path = FuncResolve; sourceTree = "<group>"; };
 		FC62B47023B6147500CFA9F5 /* DispatchQueue */ = {isa = PBXFileReference; lastKnownFileType = text; path = DispatchQueue; sourceTree = "<group>"; };
+		FCFB581623BD933B00E1CFA1 /* UIViewControllerAnimation */ = {isa = PBXFileReference; lastKnownFileType = text; path = UIViewControllerAnimation; sourceTree = "<group>"; };
 		"LeakCheckFramework::LeakCheckFramework::Product" /* LeakCheckFramework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = LeakCheckFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"LeakCheckFramework::LeakCheckFrameworkTests::Product" /* LeakCheckFrameworkTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = LeakCheckFrameworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"LeakCheckFramework::SwiftLeakChecker::Product" /* SwiftLeakChecker */ = {isa = PBXFileReference; lastKnownFileType = text; path = SwiftLeakChecker; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -490,7 +495,6 @@
 		OBJ_167 /* SyntaxCollections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxCollections.swift; sourceTree = "<group>"; };
 		OBJ_168 /* SyntaxFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxFactory.swift; sourceTree = "<group>"; };
 		OBJ_169 /* SyntaxKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxKind.swift; sourceTree = "<group>"; };
-		OBJ_17 /* LeakCheckFramework.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeakCheckFramework.swift; sourceTree = "<group>"; };
 		OBJ_170 /* SyntaxNodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxNodes.swift; sourceTree = "<group>"; };
 		OBJ_171 /* SyntaxRewriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxRewriter.swift; sourceTree = "<group>"; };
 		OBJ_172 /* TokenKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenKind.swift; sourceTree = "<group>"; };
@@ -500,7 +504,7 @@
 		OBJ_187 /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; path = images; sourceTree = SOURCE_ROOT; };
 		OBJ_188 /* DerivedData */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DerivedData; sourceTree = SOURCE_ROOT; };
 		OBJ_189 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		OBJ_20 /* AnimationRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationRule.swift; sourceTree = "<group>"; };
+		OBJ_20 /* UIViewAnimationRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewAnimationRule.swift; sourceTree = "<group>"; };
 		OBJ_21 /* DispatchQueueRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchQueueRule.swift; sourceTree = "<group>"; };
 		OBJ_22 /* CollectionRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionRules.swift; sourceTree = "<group>"; };
 		OBJ_23 /* NonEscapeRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonEscapeRule.swift; sourceTree = "<group>"; };
@@ -512,7 +516,7 @@
 		OBJ_29 /* Variable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Variable.swift; sourceTree = "<group>"; };
 		OBJ_31 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		OBJ_34 /* LeakDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeakDetectorTests.swift; sourceTree = "<group>"; };
-		OBJ_36 /* Animation */ = {isa = PBXFileReference; explicitFileType = text; path = Animation; sourceTree = "<group>"; };
+		OBJ_36 /* UIViewAnimation */ = {isa = PBXFileReference; explicitFileType = text; path = UIViewAnimation; sourceTree = "<group>"; };
 		OBJ_38 /* Leak1 */ = {isa = PBXFileReference; explicitFileType = text; path = Leak1; sourceTree = "<group>"; };
 		OBJ_39 /* Leak2 */ = {isa = PBXFileReference; explicitFileType = text; path = Leak2; sourceTree = "<group>"; };
 		OBJ_40 /* NestedClosure */ = {isa = PBXFileReference; explicitFileType = text; path = NestedClosure; sourceTree = "<group>"; };
@@ -842,7 +846,8 @@
 		OBJ_19 /* NonEscapeRules */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_20 /* AnimationRule.swift */,
+				FC478F3B23B9BB8B0076252B /* UIViewControllerAnimationRule.swift */,
+				OBJ_20 /* UIViewAnimationRule.swift */,
 				OBJ_21 /* DispatchQueueRule.swift */,
 				OBJ_22 /* CollectionRules.swift */,
 				OBJ_23 /* NonEscapeRule.swift */,
@@ -883,7 +888,8 @@
 			isa = PBXGroup;
 			children = (
 				FC62B46723B4B1C200CFA9F5 /* EscapingAttribute */,
-				OBJ_36 /* Animation */,
+				OBJ_36 /* UIViewAnimation */,
+				FCFB581623BD933B00E1CFA1 /* UIViewControllerAnimation */,
 				FC62B47023B6147500CFA9F5 /* DispatchQueue */,
 				FC62B46E23B60E3F00CFA9F5 /* FuncResolve */,
 				FC478F3123B856D20076252B /* TypeInfer */,
@@ -893,6 +899,7 @@
 				FC478F3923B89CC80076252B /* TypeResolve */,
 				OBJ_38 /* Leak1 */,
 				OBJ_39 /* Leak2 */,
+				FC478F3E23B9ED5A0076252B /* Extensions */,
 			);
 			path = Snippets;
 			sourceTree = "<group>";
@@ -1047,7 +1054,6 @@
 				OBJ_14 /* GraphBuilder.swift */,
 				OBJ_15 /* GraphLeakDetector.swift */,
 				OBJ_16 /* Leak.swift */,
-				OBJ_17 /* LeakCheckFramework.swift */,
 				OBJ_18 /* LeakDetector.swift */,
 				OBJ_19 /* NonEscapeRules */,
 				OBJ_24 /* Scope.swift */,
@@ -1410,12 +1416,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCFB581723BD947E00E1CFA1 /* UIViewControllerAnimation in Resources */,
 				FC62B46923B4B1F000CFA9F5 /* EscapingAttribute in Resources */,
 				FC478F3A23B89CC80076252B /* TypeResolve in Resources */,
-				FC62B44523B4B18700CFA9F5 /* Animation in Resources */,
+				FC62B44523B4B18700CFA9F5 /* UIViewAnimation in Resources */,
 				FC62B44723B4B18700CFA9F5 /* Leak1 in Resources */,
 				FC62B44823B4B18700CFA9F5 /* Leak2 in Resources */,
 				FC478F3423B85A670076252B /* NonEscapingClosure in Resources */,
+				FC478F3F23B9ED5A0076252B /* Extensions in Resources */,
 				FC62B44923B4B18700CFA9F5 /* NestedClosure in Resources */,
 				FC62B46D23B6087700CFA9F5 /* IfElse in Resources */,
 				FC62B46F23B60E3F00CFA9F5 /* FuncResolve in Resources */,
@@ -1460,9 +1468,8 @@
 				OBJ_231 /* GraphBuilder.swift in Sources */,
 				OBJ_232 /* GraphLeakDetector.swift in Sources */,
 				OBJ_233 /* Leak.swift in Sources */,
-				OBJ_234 /* LeakCheckFramework.swift in Sources */,
 				OBJ_235 /* LeakDetector.swift in Sources */,
-				OBJ_236 /* AnimationRule.swift in Sources */,
+				OBJ_236 /* UIViewAnimationRule.swift in Sources */,
 				OBJ_237 /* DispatchQueueRule.swift in Sources */,
 				OBJ_238 /* CollectionRules.swift in Sources */,
 				OBJ_239 /* NonEscapeRule.swift in Sources */,
@@ -1473,6 +1480,7 @@
 				OBJ_244 /* Utility.swift in Sources */,
 				OBJ_245 /* Variable.swift in Sources */,
 				FC62B46B23B4FF0C00CFA9F5 /* ExprSyntaxPredicate.swift in Sources */,
+				FC478F3D23B9E72F0076252B /* UIViewControllerAnimationRule.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
