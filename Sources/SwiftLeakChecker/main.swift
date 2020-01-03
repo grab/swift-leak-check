@@ -4,7 +4,7 @@
 //
 
 import Foundation
-import LeakCheckFramework
+import SwiftLeakCheck
 
 enum CommandLineError: Error, LocalizedError {
   case missingFileName

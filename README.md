@@ -34,7 +34,7 @@ For second leak, although `self` is captured weakly by the inner closure, but `s
 
 # Usage
 
-There're 2 ways to use this tool: the fastest way is to use the provided SwiftLeakChecker target and start detecting leaks in your code, or you can drop the LeakCheckFramework in your code
+There're 2 ways to use this tool: the fastest way is to use the provided SwiftLeakChecker target and start detecting leaks in your code, or you can drop the SwiftLeakCheck framework in your code
 and start building your own tool
 
 ### SwiftLeakChecker
@@ -73,17 +73,17 @@ let package = Package(
     .package(url: "This repo .git url", .exact("package version")),
   ],
   targets: [
-    .target(name: "MyAwesomeLeakDetector", dependencies: ["LeakCheckFramework"]),
+    .target(name: "MyAwesomeLeakDetector", dependencies: ["SwiftLeakCheck"]),
   ]
 )
 ```
 
-Then, import `LeakCheckFramework` in your Swift code
+Then, import `SwiftLeakCheck` in your Swift code
 
 To create a leak detector and start detecting: 
 
 ```swift
-import LeakCheckFramework
+import SwiftLeakCheck
 
 let url = URL(fileURLWithPath: "absolute/path/to/your/swift/file/or/folder")
 let detector = GraphLeakDetector()
@@ -135,7 +135,7 @@ In this example, `innerSelf` captures `self`, because it is originated from `str
 
 **2. Check if a closure is non-escaping**
 
-We use the information from the AST to determine if a closure is non-escaping.
+We use as much information about the closure as possible to determine if it is non-escaping or not.
 
 In the example below, `block` is non-escaping because it's not marked as `@escaping` and it's non-optional
 ```
@@ -194,51 +194,98 @@ To overcome that, you can define custom rules which have logic to classify a clo
 
 # Non-escaping rules
 
-To define a rule, extend from `NonEscapeRule` protocol and override `func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool`
+By default, we already did most of the legworks trying to determine if a closure is non-escaping (See #2 of `How it works` section)
+
+But in some cases, there's just not enough information in the source file. 
+For eg, we know that a closure passed to `DispatchQueue.main.async` will be executed and gone very soon, hence it's safe to treat it as non-escaping. But the `DispatchQueue` code is not defined in the current source file, thus we don't have any information about it.
+
+The solution for this is to define a non-escaping rule. A non-escaping rule is a piece of code that takes in a closure expression and tells us whether the closure is non-escaping or not.
+To define a non-escaping rule, extend from `BaseNonEscapeRule`  and override `func isNonEscape(arg: FunctionCallArgumentSyntax,....) -> Bool`
+
+Here's a rule that matches `DispatchQueue.main.async` or `DispatchQueue.global(qos:).asyncAfter` :
 
 ```swift
-public final class DispatchQueueRule: NonEscapeRule {
+open class DispatchQueueRule: NonEscapeRule {
   
-  public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
-    return closureNode.isArgumentInFunctionCall(
-      functionNamePredicate: { $0 == "async" || $0 == "sync" || $0 == "asyncAfter" },
-      argumentNamePredicate: { $0 == "execution" },
-      calledExprPredicate: { expr in
-        if let memberAccessExpr = expr as? MemberAccessExprSyntax {
-          return memberAccessExpr.match("DispatchQueue.main")
-        } else if let function = expr as? FunctionCallExprSyntax {
-          if let subExpr = function.calledExpression as? MemberAccessExprSyntax {
-            return subExpr.match("DispatchQueue.global")
-          }
-        }
-        return false
-      })
+  open override isNonEscape(arg: FunctionCallArgumentSyntax?, funcCallExpr: FunctionCallExprSyntax,, graph: Graph) -> Bool {
+    // Signature of `async` function
+    let asyncSignature = FunctionSignature(name: "async", params: [
+      FunctionParam(name: "execute", isClosure: true)
+    ])
+    
+    // Predicate to match DispatchQueue.main
+    let mainQueuePredicate = ExprSyntaxPredicate.memberAccess("main", base: ExprSyntaxPredicate.name("DispatchQueue"))
+    
+    let mainQueueAsyncPredicate = ExprSyntaxPredicate.funcCall(asyncSignature, base: mainQueuePredicate)
+    if funcCallExpr.match(mainQueueAsyncPredicate) { // Matched DispatchQueue.main.async(...)
+        return true
+    }
+    
+    // Signature of `asyncAfter` function
+    let asyncAfterSignature = FunctionSignature(name: "asyncAfter", params: [
+      FunctionParam(name: "deadline"),
+      FunctionParam(name: "execute", isClosure: true)
+    ]) 
+    
+    // Predicate to match DispatchQueue.global(qos: ...) or DispatchQueue.global()
+    let globalQueuePredicate = ExprSyntaxPredicate.funcCall(
+      FunctionSignature(name: "global", params: [
+        FunctionParam(name: "qos", canOmit: true)
+        ]),
+      base: ExprSyntaxPredicate.name("DispatchQueue")
+    )
+    
+    let globalQueueAsyncAfterPredicate = ExprSyntaxPredicate.funcCall(asyncAfterSignature, base: globalQueuePredicate)
+    if funcCallExpr.match(globalQueueAsyncAfterPredicate) {
+        return true
+    }
+    
+    // Doesn't match either function
+    return false
   }
 }
 ```
 
-then pass to the leak detector:
+Here's another example of rule that matches `UIView.animate(withDurations: animations:)`:
 
 ```swift
-let leakDetector = GraphLeakDetector(nonEscapingRules: [DispatchQueueRule()])
+open class UIViewAnimationRule: BaseNonEscapeRule {
+  open override func isNonEscape(arg: FunctionCallArgumentSyntax?, funcCallExpr: FunctionCallExprSyntax, graph: Graph) -> Bool {
+    let signature = FunctionSignature(name: "animate", params: [
+      FunctionParam(name: "withDuration"),
+      FunctionParam(name: "animations", isClosure: true)
+      ])
+    
+    let predicate = ExprSyntaxPredicate.funcCall(signature, base: ExprSyntaxPredicate.name("UIView"))
+    return funcCallExpr.match(predicate)
+  }
+}
 ```
 
-The above rule will classify all usages of closures in `DispatchQueue.main.async(...)`, `DispatchQueue.global.asyncAfter(...)`, ... as non-escaping
+After creating the non-escaping rule, pass it to the leak detector:
+
+```swift
+let leakDetector = GraphLeakDetector(nonEscapingRules: [DispatchQueueRule(), UIViewAnimationRule()])
+```
 
 # Predefined non-escaping rules
 
-We have built some non-escaping rules that are ready to be used. 
+There're some ready-to-be-used non-escaping rules:
 
 **1. DispatchQueueRule**
 
 We know that a closure passed to `DispatchQueue.main.async` or its variations is escaping, but the closure will be executed very soon and destroyed after that. So even if it holds a strong reference to `self`, the reference
 will be gone quickly. So it's actually ok to treat it as non-escaping
 
-**2. AnimationRule**
+**3. UIViewAnimationRule**
 
-UIView animation rules. Similar to DispatchQueue, UIView animation closures are escaping but will be executed then destroyed quickly.
+UIView static animation functions. Similar to DispatchQueue, UIView animation closures are escaping but will be executed then destroyed quickly.
 
-**3. FPOperatorsRule**
+**3. UIViewControllerAnimationRule**
+
+UIViewController's present/dismiss functions. Similar to UIView animation rule.
+
+**4. CollectionRules**
 
 Swift Collection map/flatMap/compactMap/sort/filter/forEach. All these Swift Collection functions take in a non-escaping closure
 
