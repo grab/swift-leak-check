@@ -1,6 +1,6 @@
 # Swift Leak Checker
 
-A tool that can detect potential memory leak caused by strongly captured `self` in `escaping` closure
+A framework, a command-line tool that can detect potential memory leak caused by strongly captured `self` in `escaping` closure
 
 <img src=images/leakcheck_sample.png width=800/>
 
