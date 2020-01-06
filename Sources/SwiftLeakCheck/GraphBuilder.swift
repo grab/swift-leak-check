@@ -11,11 +11,11 @@
 import SwiftSyntax
 
 final class GraphBuilder {
-  static func buildGraph(node: SourceFileSyntax) -> Graph {
+  static func buildGraph(node: SourceFileSyntax) -> GraphImpl {
     // First round: build the graph
     let vistor = GraphBuilderVistor()
     node.walk(vistor)
-    let graph = Graph(sourceFileScope: vistor.sourceFileScope)
+    let graph = GraphImpl(sourceFileScope: vistor.sourceFileScope)
     
     // Second round: resolve the references
     node.walk(ReferenceBuilderVisitor(graph: graph))
@@ -82,13 +82,10 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
   
   // Note: this is not necessarily in a func x(param...)
-  // Swift will treat `param` as ClosureParamSyntax in the code below
-  // x.block { param in
-  // }
-  // But it will treat `param` as FunctionParameterSyntax if we enclose the param in `(` and `)`
-  // x.block { (param) in
-  // }
-  // Not sure if it's Swift bug
+  // Take this example:
+  //  x.block { param in ... }
+  // Swift treats `param` as ClosureParamSyntax, but if we put `param` in open and close parathenses,
+  // Swift will treat it as FunctionParameterSyntax
   override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
     guard let scope = stack.peek(), scope.type.isFunction || scope.type == .enumCaseNode else {
       fatalError()
@@ -170,8 +167,8 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
 
 /// Visit the tree and resolve references
 private final class ReferenceBuilderVisitor: BaseGraphVistor {
-  private let graph: Graph
-  init(graph: Graph) {
+  private let graph: GraphImpl
+  init(graph: GraphImpl) {
     self.graph = graph
   }
   

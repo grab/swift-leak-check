@@ -53,9 +53,9 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
     return false
   }
   
-  open func isUIViewControllerType(tokens: [TokenSyntax]) -> Bool {
+  open func isUIViewControllerType(name: [String]) -> Bool {
     
-    let typeName = tokens.last?.text ?? ""
+    let typeName = name.last ?? ""
     
     let candidates = [
       "UIViewController",
@@ -73,13 +73,13 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
   }
   
   private func isUIViewControllerType(typeDecl: TypeDecl) -> Bool {
-    if isUIViewControllerType(tokens: typeDecl.tokens) {
+    if isUIViewControllerType(name: typeDecl.tokens.map { $0.text }) {
       return true
     }
     
-    let inheritantTypeNames = (typeDecl.inheritanceTypes ?? []).map { $0.typeName }
-    for inheritantTypeName in inheritantTypeNames {
-      if isUIViewControllerType(tokens: inheritantTypeName.tokens ?? []) {
+    let inheritantTypes = (typeDecl.inheritanceTypes ?? []).map { $0.typeName }
+    for inheritantType in inheritantTypes {
+      if isUIViewControllerType(name: (inheritantType.tokens ?? []).map { $0.text }) {
         return true
       }
     }
@@ -103,16 +103,14 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
       }
     }
     
-    // Eg: x.doSmth()
-    // We find the type of `x` and check if it's UIViewController based
-    if case let .type(tokens) = graph.resolveType(base) {
-      // If we can find the TypeDecl
-      if let typeDecl = graph.findTypeDecl(tokens: tokens) {
-        return isUIViewControllerType(typeDecl: typeDecl)
-      }
-      // Else, we will just rely on the type name
-      return isUIViewControllerType(tokens: tokens)
-    } else {
+    // Eg: base.doSmth()
+    // We check if base is UIViewController
+    switch graph.resolveExprType(base) {
+    case .type(let typeDecl):
+      return isUIViewControllerType(typeDecl: typeDecl)
+    case .name(let name):
+      return isUIViewControllerType(name: name)
+    default:
       return false
     }
   }

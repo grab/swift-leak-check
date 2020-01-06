@@ -88,12 +88,13 @@ final class LeakDetectorTests: XCTestCase {
     }
     
     do {
-      let leakDetector = GraphLeakDetector(nonEscapeRules: [
-          UIViewAnimationRule(),
-          UIViewControllerAnimationRule(),
-          DispatchQueueRule()
+      let leakDetector = GraphLeakDetector()
+      leakDetector.nonEscapeRules = [
+        UIViewAnimationRule(),
+        UIViewControllerAnimationRule(),
+        DispatchQueueRule()
         ] + CollectionRules.rules
-      )
+      
       let leaks = try leakDetector.detect(content: content)
       let leakAtLines = leaks.map { $0.line }
       let leakAtLinesUnique = NSOrderedSet(array: leakAtLines).array as! [Int]

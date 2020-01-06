@@ -191,34 +191,35 @@ open class Scope: Hashable, CustomStringConvertible {
   public let parent: Scope?
   public private(set) var variables = Stack<Variable>()
   public private(set) var childScopes = [Scope]()
-  public var functions: [Function] {
+  public var type: ScopeType {
+    return scopeNode.type
+  }
+  
+  public var childFunctions: [Function] {
     return childScopes
       .compactMap { scope in
         if case let .funcNode(funcNode) = scope.scopeNode {
           return funcNode
         }
         return nil
-      }
+    }
   }
   
-  public var type: ScopeType {
-    return scopeNode.type
+  public var childTypeDecls: [TypeDecl] {
+    return childScopes
+      .compactMap { $0.typeDecl }
   }
   
   public var typeDecl: TypeDecl? {
     switch scopeNode {
     case .classNode(let node):
-      return TypeDecl(
-        tokens: [node.identifier],
-        inheritanceTypes: node.inheritanceClause?.inheritedTypeCollection.map { $0 },
-        scope: self
-      )
+      return TypeDecl(tokens: [node.identifier], inheritanceTypes: node.inheritanceClause?.inheritedTypeCollection.map { $0 }, scope: self)
     case .structNode(let node):
-      return TypeDecl(tokens: [node.identifier], inheritanceTypes: nil, scope: self)
+      return TypeDecl(tokens: [node.identifier], inheritanceTypes: node.inheritanceClause?.inheritedTypeCollection.map { $0 }, scope: self)
     case .enumNode(let node):
-      return TypeDecl(tokens: [node.identifier], inheritanceTypes: nil, scope: self)
+      return TypeDecl(tokens: [node.identifier], inheritanceTypes: node.inheritanceClause?.inheritedTypeCollection.map { $0 }, scope: self)
     case .extensionNode(let node):
-      return TypeDecl(tokens: node.extendedType.tokens!, inheritanceTypes: nil, scope: self)
+      return TypeDecl(tokens: node.extendedType.tokens!, inheritanceTypes: node.inheritanceClause?.inheritedTypeCollection.map { $0 }, scope: self)
     default:
       return nil
     }
@@ -249,16 +250,18 @@ open class Scope: Hashable, CustomStringConvertible {
     variables.push(variable)
   }
   
-  public func findVariable(_ reference: IdentifierExprSyntax) -> Variable? {
+  func getVariable(_ node: IdentifierExprSyntax) -> Variable? {
     for variable in variables {
-      // Special case: guard let `x` = x
+      // Special case:
+      // guard let `x` = x else { ... }
       // Here x on the right cannot be resolved to x on the left
-      if case let .binding(_, valueNode) = variable.raw, valueNode != nil && valueNode! == reference {
+      if case let .binding(_, valueNode) = variable.raw,
+        valueNode != nil && valueNode! == node {
         continue
       }
       
-      if variable.raw.token.isBefore(reference) || canUseVariableOrFuncInAnyOrder {
-        if variable.name == reference.identifier.text {
+      if variable.raw.token.isBefore(node) || canUseVariableOrFuncInAnyOrder {
+        if variable.name == node.identifier.text {
           return variable
         }
       }
@@ -267,18 +270,17 @@ open class Scope: Hashable, CustomStringConvertible {
     return nil
   }
   
-  public func findFunction(_ reference: Symbol) -> [Function] {
-    return functions.filter { function in
-      if function.identifier.isBefore(reference.node) || canUseVariableOrFuncInAnyOrder {
-        return function.identifier.text == reference.name
+  func getFunctionWithSymbol(_ symbol: Symbol) -> [Function] {
+    return childFunctions.filter { function in
+      if function.identifier.isBefore(symbol.node) || canUseVariableOrFuncInAnyOrder {
+        return function.identifier.text == symbol.name
       }
       return false
     }
   }
   
-  public func findTypeDecl(name: String) -> [TypeDecl] {
-    return childScopes
-      .compactMap { $0.typeDecl }
+  func getTypeDecl(name: String) -> [TypeDecl] {
+    return childTypeDecls
       .filter { typeDecl in
         return typeDecl.tokens.count == 1 && typeDecl.tokens[0].text == name
       }
@@ -298,19 +300,6 @@ extension Scope {
   public static func == (_ lhs: Scope, _ rhs: Scope) -> Bool {
     return lhs.scopeNode == rhs.scopeNode
   }
-}
-
-// Class, struct, enum or extension
-public struct TypeDecl: Equatable {
-  /// The name of the class/struct/enum/extension.
-  /// For class/struct/enum, it's 1 element
-  /// For extension, it could be multiple. Eg, extension X.Y.Z {...}
-  public let tokens: [TokenSyntax]
-  
-  // Only for class
-  public let inheritanceTypes: [InheritedTypeSyntax]?
-  
-  public let scope: Scope
 }
 
 extension Syntax {

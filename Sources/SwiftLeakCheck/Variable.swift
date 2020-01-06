@@ -24,6 +24,14 @@ public enum RawVariable {
   }
 }
 
+indirect enum TypeInfo {
+  case exact(TypeSyntax)
+  case inferedFromExpr(ExprSyntax)
+  case inferedFromSequence(ExprSyntax)
+  case inferedFromTuple(tupleType: TypeInfo, index: Int)
+  case inferedFromClosure(ClosureExprSyntax, paramIndex: Int, paramCount: Int)
+}
+
 // Represent a variable declaration. Eg
 // var a = 1
 // let b = c // b is the Variable, c is not (c is a reference)

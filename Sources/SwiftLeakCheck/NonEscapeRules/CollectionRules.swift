@@ -166,16 +166,16 @@ open class CollectionMaxMinRule: BaseNonEscapeRule {
   }
 }
 
-private func isCollection(_ node: ExprSyntax?, graph: Graph) -> Bool {
-  guard let node = node else {
+private func isCollection(_ expr: ExprSyntax?, graph: Graph) -> Bool {
+  guard let expr = expr else {
     return false
   }
-  return graph.isCollection(node)
+  return graph.isCollection(expr)
 }
 
-private func isOptional(_ node: ExprSyntax?, graph: Graph) -> Bool {
-  guard let node = node else {
+private func isOptional(_ expr: ExprSyntax?, graph: Graph) -> Bool {
+  guard let expr = expr else {
     return false
   }
-  return graph.isOptional(node)
+  return graph.resolveExprType(expr).isOptional
 }

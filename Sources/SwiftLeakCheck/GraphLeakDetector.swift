@@ -12,11 +12,7 @@ import SwiftSyntax
 
 public final class GraphLeakDetector: BaseSyntaxTreeLeakDetector {
   
-  public let nonEscapeRules: [NonEscapeRule]
-  
-  public init(nonEscapeRules: [NonEscapeRule] = []) {
-    self.nonEscapeRules = nonEscapeRules
-  }
+  public var nonEscapeRules: [NonEscapeRule] = []
   
   override public func detect(_ sourceFileNode: SourceFileSyntax) -> [Leak] {
     var res: [Leak] = []
@@ -30,11 +26,11 @@ public final class GraphLeakDetector: BaseSyntaxTreeLeakDetector {
 }
 
 private final class LeakSyntaxVisitor: BaseGraphVistor {
-  private let graph: Graph
+  private let graph: GraphImpl
   private let onLeakDetected: (Leak) -> Void
   private let nonEscapeRules: [NonEscapeRule]
   
-  init(graph: Graph, nonEscapeRules: [NonEscapeRule], onLeakDetected: @escaping (Leak) -> Void) {
+  init(graph: GraphImpl, nonEscapeRules: [NonEscapeRule], onLeakDetected: @escaping (Leak) -> Void) {
     self.graph = graph
     self.nonEscapeRules = nonEscapeRules
     self.onLeakDetected = onLeakDetected
@@ -62,10 +58,10 @@ private final class LeakSyntaxVisitor: BaseGraphVistor {
       return
     }
     
-    var currentScope = graph.getClosetScopeThatCanResolve(.identifier(node))
+    var currentScope = graph.closetScopeThatCanResolveSymbol(.identifier(node))
     var isEscape = false
     while true {
-      if let variable = currentScope.findVariable(node) {
+      if let variable = currentScope.getVariable(node) {
         if !isEscape {
           // No leak
           return

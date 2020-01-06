@@ -28,12 +28,12 @@ do {
   let dirScanner = DirectoryScanner(callback: { fileUrl, shouldStop in
     do {
       print("Scan \(fileUrl)")
-      let leakDetector = GraphLeakDetector(nonEscapeRules: [
-          UIViewAnimationRule(),
-          UIViewControllerAnimationRule(),
-          DispatchQueueRule()
+      let leakDetector = GraphLeakDetector()
+      leakDetector.nonEscapeRules = [
+        UIViewAnimationRule(),
+        UIViewControllerAnimationRule(),
+        DispatchQueueRule()
         ] + CollectionRules.rules
-      )
       
       let startDate = Date()
       let leaks = try leakDetector.detect(fileUrl)

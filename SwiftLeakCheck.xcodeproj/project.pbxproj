@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		FC6F5D1523C075170094A930 /* TypeDecl.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6F5D1423C075170094A930 /* TypeDecl.swift */; };
+		FC6F5D1723C075BD0094A930 /* SourceFileScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6F5D1623C075BD0094A930 /* SourceFileScope.swift */; };
 		FCFB586623BE29AE00E1CFA1 /* EscapingAttribute in Resources */ = {isa = PBXBuildFile; fileRef = FCFB585723BE297F00E1CFA1 /* EscapingAttribute */; };
 		FCFB586723BE29AE00E1CFA1 /* NonEscapingClosure in Resources */ = {isa = PBXBuildFile; fileRef = FCFB585823BE297F00E1CFA1 /* NonEscapingClosure */; };
 		FCFB586823BE29AE00E1CFA1 /* DispatchQueue in Resources */ = {isa = PBXBuildFile; fileRef = FCFB585923BE297F00E1CFA1 /* DispatchQueue */; };
@@ -34,6 +36,9 @@
 		FCFB587023BE29AE00E1CFA1 /* FuncResolve in Resources */ = {isa = PBXBuildFile; fileRef = FCFB586123BE297F00E1CFA1 /* FuncResolve */; };
 		FCFB587123BE29AE00E1CFA1 /* Leak1 in Resources */ = {isa = PBXBuildFile; fileRef = FCFB586223BE297F00E1CFA1 /* Leak1 */; };
 		FCFB587223BE29AE00E1CFA1 /* NestedClosure in Resources */ = {isa = PBXBuildFile; fileRef = FCFB586323BE297F00E1CFA1 /* NestedClosure */; };
+		FCFB587723BEED8C00E1CFA1 /* TypeResolve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCFB587623BEED8C00E1CFA1 /* TypeResolve.swift */; };
+		FCFB587A23BEEE8F00E1CFA1 /* Symbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCFB587923BEEE8F00E1CFA1 /* Symbol.swift */; };
+		FCFB587C23BF27CB00E1CFA1 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCFB587B23BF27CB00E1CFA1 /* Graph.swift */; };
 		OBJ_186 /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_103 /* api.c */; };
 		OBJ_187 /* emitter.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_104 /* emitter.c */; };
 		OBJ_188 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_105 /* parser.c */; };
@@ -109,7 +114,6 @@
 		OBJ_307 /* DirectoryScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* DirectoryScanner.swift */; };
 		OBJ_308 /* Function.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Function.swift */; };
 		OBJ_309 /* FunctionSignature.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* FunctionSignature.swift */; };
-		OBJ_310 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* Graph.swift */; };
 		OBJ_311 /* GraphBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* GraphBuilder.swift */; };
 		OBJ_312 /* GraphLeakDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* GraphLeakDetector.swift */; };
 		OBJ_313 /* Leak.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Leak.swift */; };
@@ -414,6 +418,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FC6F5D1423C075170094A930 /* TypeDecl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeDecl.swift; sourceTree = "<group>"; };
+		FC6F5D1623C075BD0094A930 /* SourceFileScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceFileScope.swift; sourceTree = "<group>"; };
 		FCFB585723BE297F00E1CFA1 /* EscapingAttribute */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EscapingAttribute; sourceTree = "<group>"; };
 		FCFB585823BE297F00E1CFA1 /* NonEscapingClosure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = NonEscapingClosure; sourceTree = "<group>"; };
 		FCFB585923BE297F00E1CFA1 /* DispatchQueue */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DispatchQueue; sourceTree = "<group>"; };
@@ -427,6 +433,9 @@
 		FCFB586123BE297F00E1CFA1 /* FuncResolve */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = FuncResolve; sourceTree = "<group>"; };
 		FCFB586223BE297F00E1CFA1 /* Leak1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Leak1; sourceTree = "<group>"; };
 		FCFB586323BE297F00E1CFA1 /* NestedClosure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = NestedClosure; sourceTree = "<group>"; };
+		FCFB587623BEED8C00E1CFA1 /* TypeResolve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeResolve.swift; sourceTree = "<group>"; };
+		FCFB587923BEEE8F00E1CFA1 /* Symbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Symbol.swift; sourceTree = "<group>"; };
+		FCFB587B23BF27CB00E1CFA1 /* Graph.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
 		OBJ_10 /* DirectoryScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryScanner.swift; sourceTree = "<group>"; };
 		OBJ_103 /* api.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = api.c; sourceTree = "<group>"; };
 		OBJ_104 /* emitter.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = emitter.c; sourceTree = "<group>"; };
@@ -455,7 +464,6 @@
 		OBJ_127 /* YamlError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YamlError.swift; sourceTree = "<group>"; };
 		OBJ_128 /* shim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = shim.swift; sourceTree = "<group>"; };
 		OBJ_129 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = /Users/hoang.le/Projects/SwiftLeakCheck/.build/checkouts/Yams/Package.swift; sourceTree = "<group>"; };
-		OBJ_13 /* Graph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
 		OBJ_131 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = /Users/hoang.le/Projects/SwiftLeakCheck/.build/checkouts/SWXMLHash/Package.swift; sourceTree = "<group>"; };
 		OBJ_132 /* SWXMLHash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWXMLHash.swift; sourceTree = "<group>"; };
 		OBJ_133 /* XMLIndexer+XMLIndexerDeserializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XMLIndexer+XMLIndexerDeserializable.swift"; sourceTree = "<group>"; };
@@ -944,7 +952,7 @@
 			path = include;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -956,7 +964,6 @@
 				OBJ_179 /* LICENSE */,
 				OBJ_180 /* README.md */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_51 /* SourceKit */ = {
@@ -1039,22 +1046,26 @@
 		OBJ_8 /* SwiftLeakCheck */ = {
 			isa = PBXGroup;
 			children = (
+				OBJ_18 /* NonEscapeRules */,
 				OBJ_9 /* BaseSyntaxTreeLeakDetector.swift */,
 				OBJ_10 /* DirectoryScanner.swift */,
 				OBJ_11 /* Function.swift */,
 				OBJ_12 /* FunctionSignature.swift */,
-				OBJ_13 /* Graph.swift */,
+				FCFB587B23BF27CB00E1CFA1 /* Graph.swift */,
 				OBJ_14 /* GraphBuilder.swift */,
 				OBJ_15 /* GraphLeakDetector.swift */,
 				OBJ_16 /* Leak.swift */,
 				OBJ_17 /* LeakDetector.swift */,
-				OBJ_18 /* NonEscapeRules */,
 				OBJ_26 /* Scope.swift */,
+				FC6F5D1623C075BD0094A930 /* SourceFileScope.swift */,
 				OBJ_27 /* Stack.swift */,
 				OBJ_28 /* SwiftSyntax+Extensions.swift */,
 				OBJ_29 /* SyntaxRetrieval.swift */,
 				OBJ_30 /* Utility.swift */,
 				OBJ_31 /* Variable.swift */,
+				FCFB587623BEED8C00E1CFA1 /* TypeResolve.swift */,
+				FCFB587923BEEE8F00E1CFA1 /* Symbol.swift */,
+				FC6F5D1423C075170094A930 /* TypeDecl.swift */,
 			);
 			name = SwiftLeakCheck;
 			path = Sources/SwiftLeakCheck;
@@ -1387,7 +1398,7 @@
 				English,
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_166 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1543,16 +1554,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				FCFB587C23BF27CB00E1CFA1 /* Graph.swift in Sources */,
 				OBJ_306 /* BaseSyntaxTreeLeakDetector.swift in Sources */,
 				OBJ_307 /* DirectoryScanner.swift in Sources */,
 				OBJ_308 /* Function.swift in Sources */,
 				OBJ_309 /* FunctionSignature.swift in Sources */,
-				OBJ_310 /* Graph.swift in Sources */,
+				FC6F5D1723C075BD0094A930 /* SourceFileScope.swift in Sources */,
+				FCFB587A23BEEE8F00E1CFA1 /* Symbol.swift in Sources */,
 				OBJ_311 /* GraphBuilder.swift in Sources */,
 				OBJ_312 /* GraphLeakDetector.swift in Sources */,
 				OBJ_313 /* Leak.swift in Sources */,
+				FCFB587723BEED8C00E1CFA1 /* TypeResolve.swift in Sources */,
 				OBJ_314 /* LeakDetector.swift in Sources */,
 				OBJ_316 /* CollectionRules.swift in Sources */,
+				FC6F5D1523C075170094A930 /* TypeDecl.swift in Sources */,
 				OBJ_317 /* DispatchQueueRule.swift in Sources */,
 				OBJ_318 /* ExprSyntaxPredicate.swift in Sources */,
 				OBJ_319 /* NonEscapeRule.swift in Sources */,
