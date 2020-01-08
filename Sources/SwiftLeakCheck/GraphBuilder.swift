@@ -46,8 +46,6 @@ class BaseGraphVistor: SyntaxVisitor {
   }
 }
 
-// TODO:
-// 1. Add variables in `if case let .someCase(a, b, c) {`
 fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   fileprivate var sourceFileScope: SourceFileScope!
   private var stack = Stack<Scope>()

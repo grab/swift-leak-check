@@ -107,8 +107,6 @@ public struct FunctionSignature {
   private func isMatched(param: FunctionParam, argument: FunctionCallArgumentSyntax) -> Bool {
     return param.name == argument.label?.text
   }
-  
-  // TODO: may be compare other stuffs like closure param type and return type
   private func isMatched(param: FunctionParam, trailingClosure: ClosureExprSyntax) -> Bool {
     return param.isClosure
   }

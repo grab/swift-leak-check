@@ -9,11 +9,6 @@ class SomeViewController: UIViewController {
     self.present(vc, animated: true) {
       self.doSmth()
     }
-
-    // TODO
-    // vc.dismiss(animated: true) {
-    //   self.doSmth()
-    //}
   }
 
   func doSmth() {}

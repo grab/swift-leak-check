@@ -308,10 +308,8 @@ extension GraphImpl {
       
       return nil
       
-    case is ImplicitMemberExprSyntax: // .create { ... }
-      // TODO
-      return nil
-    case is OptionalChainingExprSyntax: // optional closure
+    case is ImplicitMemberExprSyntax, // .create { ... }
+         is OptionalChainingExprSyntax: // optional closure
       // TODO
       return nil
     default:
@@ -320,8 +318,7 @@ extension GraphImpl {
     }
   }
   
-  // TODO: this could resole to `closure` as well
-  // Currently we only resolve to `func`
+  // TODO: Currently we only resolve to `func`. This could resole to `closure` as well
   private func _findFunction(symbol: Symbol, funcCallExpr: FunctionCallExprSyntax)
     -> (Function, Function.MatchResult.MappingInfo)? {
     
@@ -608,7 +605,6 @@ extension GraphImpl {
     }
     
     // x.y()
-    // TODO: here we only resolve a very specific scenario
     if let memberAccessExpr = calledExpr as? MemberAccessExprSyntax {
       guard let base = memberAccessExpr.base else {
         fatalError("Is it possible that `base` is nil ?")
@@ -759,9 +755,6 @@ extension GraphImpl {
         }
       }
       
-      // TODO
-      // There're other scenarios, such as the closure can be inside a tuple which is a function param
-      
       // Finally, fallback to rules
       for rule in nonEscapeRules {
         if rule.isNonEscape(closureNode: expr, graph: self) {
@@ -795,7 +788,6 @@ extension GraphImpl {
     case .name:
       return false
     case .type:
-      // TODO
       return false
     }
   }
