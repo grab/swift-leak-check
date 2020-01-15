@@ -325,8 +325,7 @@ extension GraphImpl {
     var result: (Function, Function.MatchResult.MappingInfo)?
     _ = _findSymbol(symbol, options: [.function]) { resolve -> Bool in
       switch resolve {
-      case .variable, .typeDecl:
-        assert(false, "Can't happen")
+      case .variable, .typeDecl: // This could be due to cache
         return false
       case .function(let function):
         let mustStop = enclosingScope(for: function).type.isTypeDecl

@@ -27,7 +27,12 @@ do {
   let url = URL(fileURLWithPath: path)
   let dirScanner = DirectoryScanner(callback: { fileUrl, shouldStop in
     do {
+      guard fileUrl.pathExtension == "swift" else {
+        return
+      }
+      
       print("Scan \(fileUrl)")
+      
       let leakDetector = GraphLeakDetector()
       leakDetector.nonEscapeRules = [
         UIViewAnimationRule(),
