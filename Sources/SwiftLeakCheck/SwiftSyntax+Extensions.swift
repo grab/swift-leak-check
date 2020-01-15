@@ -2,7 +2,7 @@
 //  SwiftSyntax+Extensions.swift
 //  LeakCheck
 //
-//  Copyright 2019 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
+//  Copyright 2020 Grabtaxi Holdings PTE LTE (GRAB), All rights reserved.
 //  Use of this source code is governed by an MIT-style license that can be found in the LICENSE file
 //
 //  Created by Hoang Le Pham on 27/10/2019.
