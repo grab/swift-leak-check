@@ -15,10 +15,16 @@ open class ExprSyntaxPredicate {
   public init(_ match: @escaping (ExprSyntax?) -> Bool) {
     self.match = match
   }
+  
+  public static let any: ExprSyntaxPredicate = .init { _ in true }
 }
 
 // MARK: - Identifier predicate
 extension ExprSyntaxPredicate {
+  public static func name(_ text: String) -> ExprSyntaxPredicate {
+    return .name({ $0 == text })
+  }
+  
   public static func name(_ namePredicate: @escaping (String) -> Bool) -> ExprSyntaxPredicate {
     return .init({ expr -> Bool in
       guard let identifierExpr = expr as? IdentifierExprSyntax else {
@@ -27,24 +33,16 @@ extension ExprSyntaxPredicate {
       return namePredicate(identifierExpr.identifier.text)
     })
   }
-  
-  public static func name(_ text: String) -> ExprSyntaxPredicate {
-    return .name({ $0 == text })
-  }
 }
 
 // MARK: - Function call predicate
 extension ExprSyntaxPredicate {
-  public static func funcCall(predicate: @escaping (FunctionCallExprSyntax) -> Bool) -> ExprSyntaxPredicate {
-    return .init({ expr -> Bool in
-      guard let funcCallExpr = expr as? FunctionCallExprSyntax else {
-        return false
-      }
-      return predicate(funcCallExpr)
-    })
+  public static func funcCall(name: String,
+                              base basePredicate: ExprSyntaxPredicate) -> ExprSyntaxPredicate {
+    return .funcCall(namePredicate: { $0 == name }, base: basePredicate)
   }
   
-  public static func funcCall(_ namePredicate: @escaping (String) -> Bool,
+  public static func funcCall(namePredicate: @escaping (String) -> Bool,
                               base basePredicate: ExprSyntaxPredicate) -> ExprSyntaxPredicate {
     return .funcCall(predicate: { funcCallExpr -> Bool in
       guard let symbol = funcCallExpr.symbol else {
@@ -55,16 +53,20 @@ extension ExprSyntaxPredicate {
     })
   }
   
-  public static func funcCall(_ name: String,
-                              base basePredicate: ExprSyntaxPredicate) -> ExprSyntaxPredicate {
-    return .funcCall({ $0 == name }, base: basePredicate)
-  }
-  
-  public static func funcCall(_ signature: FunctionSignature,
+  public static func funcCall(signature: FunctionSignature,
                               base basePredicate: ExprSyntaxPredicate) -> ExprSyntaxPredicate {
     return .funcCall(predicate: { funcCallExpr -> Bool in
       return signature.match(funcCallExpr).isMatched
         && basePredicate.match(funcCallExpr.base)
+    })
+  }
+  
+  public static func funcCall(predicate: @escaping (FunctionCallExprSyntax) -> Bool) -> ExprSyntaxPredicate {
+    return .init({ expr -> Bool in
+      guard let funcCallExpr = expr as? FunctionCallExprSyntax else {
+        return false
+      }
+      return predicate(funcCallExpr)
     })
   }
 }

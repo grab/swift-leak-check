@@ -69,13 +69,13 @@ open class UIViewAnimationRule: BaseNonEscapeRule {
                                  graph: Graph) -> Bool {
     
     // Check if base is `UIView`, if not we can end early without checking any of the signatures
-    guard funcCallExpr.match(.funcCall({ _ in true }, base: .name("UIView"))) else {
+    guard funcCallExpr.match(.funcCall(namePredicate: { _ in true }, base: .name("UIView"))) else {
       return false
     }
     
     // Now we can check each signature and ignore the base (already checked)
     for signature in signatures {
-      if funcCallExpr.match(.funcCall(signature, base: .init { _ in true })) {
+      if funcCallExpr.match(.funcCall(signature: signature, base: .any)) {
         return true
       }
     }

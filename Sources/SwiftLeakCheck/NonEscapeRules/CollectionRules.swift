@@ -40,7 +40,7 @@ open class CollectionForEachRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(signature, base: .init { expr in
+    return funcCallExpr.match(.funcCall(signature: signature, base: .init { expr in
       return !self.mustBeCollection || isCollection(expr, graph: graph)
     }))
   }
@@ -54,7 +54,7 @@ open class CollectionCompactMapRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(signature, base: .init { expr in
+    return funcCallExpr.match(.funcCall(signature: signature, base: .init { expr in
       return isCollection(expr, graph: graph)
     }))
   }
@@ -68,7 +68,7 @@ open class CollectionMapRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(signature, base: .init { expr in
+    return funcCallExpr.match(.funcCall(signature: signature, base: .init { expr in
       return isCollection(expr, graph: graph) || isOptional(expr, graph: graph)
     }))
   }
@@ -82,7 +82,7 @@ open class CollectionFlatMapRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(signature, base: .init { expr in
+    return funcCallExpr.match(.funcCall(signature: signature, base: .init { expr in
       return isCollection(expr, graph: graph) || isOptional(expr, graph: graph)
     }))
   }
@@ -96,7 +96,7 @@ open class CollectionFilterRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(signature, base: .init { expr in
+    return funcCallExpr.match(.funcCall(signature: signature, base: .init { expr in
       return isCollection(expr, graph: graph)
     }))
   }
@@ -113,8 +113,8 @@ open class CollectionSortRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(sortSignature, base: .init { return isCollection($0, graph: graph) }))
-      || funcCallExpr.match(.funcCall(sortedSignature, base: .init { return isCollection($0, graph: graph) }))
+    return funcCallExpr.match(.funcCall(signature: sortSignature, base: .init { return isCollection($0, graph: graph) }))
+      || funcCallExpr.match(.funcCall(signature: sortedSignature, base: .init { return isCollection($0, graph: graph) }))
   }
 }
 
@@ -132,8 +132,8 @@ open class CollectionFirstWhereRule: BaseNonEscapeRule {
     let base = ExprSyntaxPredicate { expr in
       return isCollection(expr, graph: graph)
     }
-    return funcCallExpr.match(.funcCall(firstWhereSignature, base: base))
-      || funcCallExpr.match(.funcCall(firstIndexWhereSignature, base: base))
+    return funcCallExpr.match(.funcCall(signature: firstWhereSignature, base: base))
+      || funcCallExpr.match(.funcCall(signature: firstIndexWhereSignature, base: base))
   }
 }
 
@@ -145,7 +145,7 @@ open class CollectionContainsRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(signature, base: .init { expr in
+    return funcCallExpr.match(.funcCall(signature: signature, base: .init { expr in
       return isCollection(expr, graph: graph) }))
   }
 }
@@ -161,8 +161,8 @@ open class CollectionMaxMinRule: BaseNonEscapeRule {
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
-    return funcCallExpr.match(.funcCall(maxSignature, base: .init { return isCollection($0, graph: graph) }))
-      || funcCallExpr.match(.funcCall(minSignature, base: .init { return isCollection($0, graph: graph) }))
+    return funcCallExpr.match(.funcCall(signature: maxSignature, base: .init { return isCollection($0, graph: graph) }))
+      || funcCallExpr.match(.funcCall(signature: minSignature, base: .init { return isCollection($0, graph: graph) }))
   }
 }
 

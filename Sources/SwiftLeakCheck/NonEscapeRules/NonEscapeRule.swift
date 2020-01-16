@@ -42,19 +42,3 @@ open class BaseNonEscapeRule: NonEscapeRule {
     return false
   }
 }
-
-public final class PredicateNonEscapeRule: BaseNonEscapeRule {
-  private let predicates: [ExprSyntaxPredicate]
-  init(predicates: [ExprSyntaxPredicate]) {
-    self.predicates = predicates
-  }
-  
-  public override func isNonEscape(arg: FunctionCallArgumentSyntax?, funcCallExpr: FunctionCallExprSyntax, graph: Graph) -> Bool {
-    for predicate in predicates {
-      if funcCallExpr.match(predicate) {
-        return true
-      }
-    }
-    return false
-  }
-}

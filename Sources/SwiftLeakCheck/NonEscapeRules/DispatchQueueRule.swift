@@ -18,7 +18,7 @@ open class DispatchQueueRule: BaseNonEscapeRule {
     self.predicates = {
       let mainQueuePredicate: ExprSyntaxPredicate = .memberAccess("main", base: .name("DispatchQueue"))
       let globalQueuePredicate: ExprSyntaxPredicate = .funcCall(
-        FunctionSignature(name: "global", params: [.init(name: "qos", canOmit: true)]),
+        signature: FunctionSignature(name: "global", params: [.init(name: "qos", canOmit: true)]),
         base: .name("DispatchQueue")
       )
       
@@ -35,17 +35,17 @@ open class DispatchQueueRule: BaseNonEscapeRule {
       
       var predicates = [mainQueuePredicate, globalQueuePredicate].flatMap { base -> [ExprSyntaxPredicate] in
         return [
-          .funcCall(asyncSignature, base: base),
-          .funcCall(syncSignature, base: base),
-          .funcCall(asyncAfterSignature, base: base)
+          .funcCall(signature: asyncSignature, base: base),
+          .funcCall(signature: syncSignature, base: base),
+          .funcCall(signature: asyncAfterSignature, base: base)
         ]
       }
       
       if let basePredicate = basePredicate {
         predicates.append(contentsOf: [
-          .funcCall(asyncSignature, base: .name(basePredicate)),
-          .funcCall(syncSignature, base: .name(basePredicate)),
-          .funcCall(asyncAfterSignature, base: .name(basePredicate)),
+          .funcCall(signature: asyncSignature, base: .name(basePredicate)),
+          .funcCall(signature: syncSignature, base: .name(basePredicate)),
+          .funcCall(signature: asyncAfterSignature, base: .name(basePredicate)),
         ])
       }
       

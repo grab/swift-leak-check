@@ -45,7 +45,7 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
     
     // Now we can check each signature and ignore the base that is already checked
     for signature in signatures {
-      if funcCallExpr.match(.funcCall(signature, base: .init { _ in true })) {
+      if funcCallExpr.match(.funcCall(signature: signature, base: .any)) {
         return true
       }
     }
