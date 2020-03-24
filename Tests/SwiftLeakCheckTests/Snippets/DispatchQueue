@@ -1,4 +1,7 @@
 class X {
+
+  private let queue: DispatchQueue!
+  
   func main() {
     DispatchQueue.main.async {
       self.doSmth()
@@ -33,6 +36,10 @@ class X {
     })
 
     DispatchQueue.global(qos: .background).sync {
+      self.doSmth()
+    }
+    
+    queue.async {
       self.doSmth()
     }
   }

@@ -1,5 +1,9 @@
 class X {
   private func main() {
+    animateSmth {
+      self.doSmth()
+    }
+    
     UIView.animate(withDuration: voiceDuration) {
       self.doSmth()
     }
@@ -39,6 +43,16 @@ class X {
     animateIfNeeded(animated: animated, updateBlock: {
       self.doSmth()
     })
+  }
+  
+  private func animateSmth(_ completion: @escaping () -> Void) {
+    UIView.animate(withDuration: 0.5,
+                   delay: 0,
+                   usingSpringWithDamping: 0.7,
+                   initialSpringVelocity: 0.5,
+                   options: [.curveEaseInOut],
+                   animations: { self.doSmth() },
+                   completion: { _ in completion() })
   }
 
   private func doSmth() {}

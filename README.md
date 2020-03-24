@@ -12,6 +12,7 @@ Some examples of memory leak that are detected by the tool:
 ```swift
 class X {
   private var handler: (() -> Void)!
+  private var anotherHandler: (() -> Void)!
   
   func setup() {
     handler = {

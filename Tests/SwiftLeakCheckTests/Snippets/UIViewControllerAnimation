@@ -1,4 +1,4 @@
-class SomeViewController: UIViewController {
+class SomeController: UIViewController {
   func main() {
     let vc = UIViewController(nibName: nil, bundle: nil)
 
@@ -6,10 +6,30 @@ class SomeViewController: UIViewController {
       self.doSmth()
     })
 
-    self.present(vc, animated: true) {
+    weak var weakSelf = self
+    weakSelf?.present(vc, animated: true) {
+      self.doSmth()
+    }
+    
+    presentSmth {
       self.doSmth()
     }
   }
 
+  func presentSmth(completion: @escaping () -> Void) {
+    let vc = UIViewController(nibName: nil, bundle: nil)
+    present(vc, animated: true, completion: {
+      completion()
+    })
+  }
+  
   func doSmth() {}
+}
+
+extension SomeController {
+  @objc fileprivate func dismissSmth() {
+    self.dismiss(animated: true) {
+      self.doSmth()
+    }
+  }
 }

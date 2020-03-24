@@ -12,57 +12,87 @@ import SwiftSyntax
 
 open class DispatchQueueRule: BaseNonEscapeRule {
   
-  private let predicates: [ExprSyntaxPredicate]
+  private let signatures: [FunctionSignature] = [
+    FunctionSignature(name: "async", params: [
+      FunctionParam(name: "execute", isClosure: true)
+    ]),
+    FunctionSignature(name: "sync", params: [
+      FunctionParam(name: "execute", isClosure: true)
+    ]),
+    FunctionSignature(name: "asyncAfter", params: [
+      FunctionParam(name: "deadline"),
+      FunctionParam(name: "execute", isClosure: true)
+    ])
+  ]
   
-  public init(basePredicate: ((String) -> Bool)? = nil) {
-    self.predicates = {
-      let mainQueuePredicate: ExprSyntaxPredicate = .memberAccess("main", base: .name("DispatchQueue"))
-      let globalQueuePredicate: ExprSyntaxPredicate = .funcCall(
-        signature: FunctionSignature(name: "global", params: [.init(name: "qos", canOmit: true)]),
-        base: .name("DispatchQueue")
-      )
-      
-      let asyncSignature = FunctionSignature(name: "async", params: [
-        FunctionParam(name: "execute", isClosure: true)
-        ])
-      let syncSignature = FunctionSignature(name: "sync", params: [
-        FunctionParam(name: "execute", isClosure: true)
-        ])
-      let asyncAfterSignature = FunctionSignature(name: "asyncAfter", params: [
-        FunctionParam(name: "deadline"),
-        FunctionParam(name: "execute", isClosure: true)
-        ])
-      
-      var predicates = [mainQueuePredicate, globalQueuePredicate].flatMap { base -> [ExprSyntaxPredicate] in
-        return [
-          .funcCall(signature: asyncSignature, base: base),
-          .funcCall(signature: syncSignature, base: base),
-          .funcCall(signature: asyncAfterSignature, base: base)
-        ]
-      }
-      
-      if let basePredicate = basePredicate {
-        predicates.append(contentsOf: [
-          .funcCall(signature: asyncSignature, base: .name(basePredicate)),
-          .funcCall(signature: syncSignature, base: .name(basePredicate)),
-          .funcCall(signature: asyncAfterSignature, base: .name(basePredicate)),
-        ])
-      }
-      
-      return predicates
-    }()
-  }
+  private let mainQueuePredicate: ExprSyntaxPredicate = .memberAccess("main", base: .name("DispatchQueue"))
+  private let globalQueuePredicate: ExprSyntaxPredicate = .funcCall(
+    signature: FunctionSignature(name: "global", params: [.init(name: "qos", canOmit: true)]),
+    base: .name("DispatchQueue")
+  )
+  
   
   open override func isNonEscape(arg: FunctionCallArgumentSyntax?,
                                  funcCallExpr: FunctionCallExprSyntax,
                                  graph: Graph) -> Bool {
     
-    for predicate in predicates {
+    for signature in signatures {
+      for queue in [mainQueuePredicate, globalQueuePredicate] {
+        let predicate: ExprSyntaxPredicate = .funcCall(signature: signature, base: queue)
+        if funcCallExpr.match(predicate) {
+          return true
+        }
+      }
+    }
+    
+    let isDispatchQueuePredicate: ExprSyntaxPredicate = .init { expr -> Bool in
+      guard let expr = expr else { return false }
+      let typeResolve = graph.resolveExprType(expr)
+      switch typeResolve.wrapped {
+      case .name(let name):
+        return self.isDispatchQueueType(name: name)
+      case .type(let typeDecl):
+        let allTypeDecls = graph.getAllTypeDeclarations(from: typeDecl)
+        for typeDecl in allTypeDecls {
+          if self.isDispatchQueueType(typeDecl: typeDecl) {
+            return true
+          }
+        }
+        
+        return false
+        
+      case .dict,
+           .sequence,
+           .tuple,
+           .optional, // Can't happen
+           .unknown:
+        return false
+      }
+    }
+    
+    for signature in signatures {
+      let predicate: ExprSyntaxPredicate = .funcCall(signature: signature, base: isDispatchQueuePredicate)
       if funcCallExpr.match(predicate) {
         return true
       }
     }
     
+    return false
+  }
+  
+  private func isDispatchQueueType(name: [String]) -> Bool {
+    return name.last == "DispatchQueue"
+  }
+  
+  private func isDispatchQueueType(typeDecl: TypeDecl) -> Bool {
+    if self.isDispatchQueueType(name: typeDecl.name) {
+      return true
+    }
+    for inheritedType in (typeDecl.inheritanceTypes ?? []) {
+      if self.isDispatchQueueType(name: inheritedType.typeName.name) {
+        return true
+      }
+    }
     return false
   }
 }

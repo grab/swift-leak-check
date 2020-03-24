@@ -149,7 +149,7 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
   
   override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
-    assert(node.caseKeyword == nil, "Unhandled case")
+    assert(node.caseKeyword == nil, "Unhandled case \(node)")
     
     guard let scope = stack.peek(), scope.type == .forLoopNode else {
       fatalError()

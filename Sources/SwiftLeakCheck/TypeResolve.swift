@@ -20,31 +20,31 @@ public indirect enum TypeResolve: Equatable {
   case unknown
   
   public var isOptional: Bool {
+    return self != self.wrapped
+  }
+  
+  public var wrapped: TypeResolve {
     switch self {
-    case .optional:
-      return true
+    case .optional(let base):
+      return base.wrapped
     case .sequence,
-         .dict,
-         .tuple,
-         .name,
-         .type,
-         .unknown:
-      return false
+       .dict,
+       .tuple,
+       .name,
+       .type,
+       .unknown:
+    return self
     }
   }
   
-  public var isInt: Bool {
-    return name == "Int"
-  }
-  
-  public var name: String? {
+  public var name: [String]? {
     switch self {
     case .optional(let base):
       return base.name
     case .name(let tokens):
-      return tokens.joined(separator: ".")
+      return tokens
     case .type(let typeDecl):
-      return typeDecl.tokens.map { $0.text }.joined(separator: ".")
+      return typeDecl.name
     case .sequence,
          .dict,
          .tuple,
@@ -66,5 +66,11 @@ public indirect enum TypeResolve: Equatable {
          .unknown:
       return .unknown
     }
+  }
+}
+
+internal extension TypeResolve {
+  var isInt: Bool {
+    return name == ["Int"]
   }
 }

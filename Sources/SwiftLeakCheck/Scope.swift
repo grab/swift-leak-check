@@ -282,7 +282,7 @@ open class Scope: Hashable, CustomStringConvertible {
   func getTypeDecl(name: String) -> [TypeDecl] {
     return childTypeDecls
       .filter { typeDecl in
-        return typeDecl.tokens.count == 1 && typeDecl.tokens[0].text == name
+        return typeDecl.name == [name]
       }
   }
   
