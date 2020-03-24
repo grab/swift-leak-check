@@ -73,13 +73,13 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
   }
   
   private func isUIViewControllerType(typeDecl: TypeDecl) -> Bool {
-    if isUIViewControllerType(name: typeDecl.tokens.map { $0.text }) {
+    if isUIViewControllerType(name: typeDecl.name) {
       return true
     }
     
     let inheritantTypes = (typeDecl.inheritanceTypes ?? []).map { $0.typeName }
     for inheritantType in inheritantTypes {
-      if isUIViewControllerType(name: (inheritantType.tokens ?? []).map { $0.text }) {
+      if isUIViewControllerType(name: inheritantType.name) {
         return true
       }
     }
@@ -105,12 +105,23 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
     
     // Eg: base.doSmth()
     // We check if base is UIViewController
-    switch graph.resolveExprType(base) {
+    let typeResolve = graph.resolveExprType(base)
+    switch typeResolve.wrapped {
     case .type(let typeDecl):
-      return isUIViewControllerType(typeDecl: typeDecl)
+      let allTypeDecls = graph.getAllTypeDeclarations(from: typeDecl)
+      for typeDecl in allTypeDecls {
+        if isUIViewControllerType(typeDecl: typeDecl) {
+          return true
+        }
+      }
+      return false
     case .name(let name):
       return isUIViewControllerType(name: name)
-    default:
+    case .dict,
+         .sequence,
+         .tuple,
+         .optional, // Can't happen
+         .unknown:
       return false
     }
   }

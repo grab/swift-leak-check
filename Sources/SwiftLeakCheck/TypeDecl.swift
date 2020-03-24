@@ -21,4 +21,8 @@ public struct TypeDecl: Equatable {
   
   // Must be class/struct/enum/extension
   public let scope: Scope
+  
+  public var name: [String] {
+    return tokens.map { $0.text }
+  }
 }

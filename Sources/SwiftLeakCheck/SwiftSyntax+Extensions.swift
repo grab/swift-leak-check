@@ -149,6 +149,10 @@ public extension TypeSyntax {
     }
     return wrapped.tokens
   }
+  
+  var name: [String] {
+    return (tokens ?? []).map { $0.text }
+  }
 }
 
 public extension OptionalBindingConditionSyntax {

@@ -37,6 +37,8 @@ public protocol Graph {
   func resolveExprType(_ expr: ExprSyntax) -> TypeResolve
   func resolveVariableType(_ variable: Variable) -> TypeResolve
   func resolveType(_ type: TypeSyntax) -> TypeResolve
+  func getAllTypeDeclarations(from typeDecl: TypeDecl) -> [TypeDecl]
+  func getAllTypeDeclarations(from name: [String]) -> [TypeDecl]
   
   func resolveVariable(_ identifier: IdentifierExprSyntax) -> Variable?
   func getVariableReferences(variable: Variable) -> [IdentifierExprSyntax]
@@ -137,7 +139,7 @@ extension GraphImpl {
     return scope
   }
   
-  private func _getScopeWithAllExtensions(_ scope: Scope) -> Set<Scope> {
+  private func _getScopeAndAllExtensions(_ scope: Scope) -> Set<Scope> {
     guard let typePath = _getFullTypePathForScope(scope) else {
       return Set([scope])
     }
@@ -208,7 +210,7 @@ extension GraphImpl {
                    options: [ResolveSymbolOption] = ResolveSymbolOption.allCases,
                    in scope: Scope,
                    onResult: (SymbolResolve) -> Bool) -> SymbolResolve? {
-    let scopeWithAllExtensions = _getScopeWithAllExtensions(scope)
+    let scopeWithAllExtensions = _getScopeAndAllExtensions(scope)
     for scope in scopeWithAllExtensions {
       if options.contains(.variable) {
         if case let .identifier(node) = symbol, let variable = scope.getVariable(node) {
@@ -296,7 +298,7 @@ extension GraphImpl {
       return _findFunction(symbol: .identifier(identifier), funcCallExpr: funcCallExpr)
     case let memberAccessExpr as MemberAccessExprSyntax: // a.doSmth(...)
       guard let base = memberAccessExpr.base else {
-        assert(false, "Is it possible that `base` is nil ?")
+        assert(false, "Is it possible that `base` is nil ? \(memberAccessExpr)")
         return nil
       }
       if couldReferenceSelf(base) {
@@ -429,16 +431,16 @@ extension GraphImpl {
     }
     
     if expr is IntegerLiteralExprSyntax {
-      return extensionsWithName(["Int"]).first.flatMap { .type($0) } ?? .name(["Int"])
+      return getAllTypeDeclarations(from: ["Int"]).first.flatMap { .type($0) } ?? .name(["Int"])
     }
     if expr is StringLiteralExprSyntax {
-      return extensionsWithName(["String"]).first.flatMap { .type($0) } ?? .name(["String"])
+      return getAllTypeDeclarations(from: ["String"]).first.flatMap { .type($0) } ?? .name(["String"])
     }
     if expr is FloatLiteralExprSyntax {
-      return extensionsWithName(["Float"]).first.flatMap { .type($0) } ?? .name(["Float"])
+      return getAllTypeDeclarations(from: ["Float"]).first.flatMap { .type($0) } ?? .name(["Float"])
     }
     if expr is BooleanLiteralExprSyntax {
-      return extensionsWithName(["Bool"]).first.flatMap { .type($0) } ?? .name(["Bool"])
+      return getAllTypeDeclarations(from: ["Bool"]).first.flatMap { .type($0) } ?? .name(["Bool"])
     }
     
     if let tupleExpr = expr as? TupleExprSyntax {
@@ -606,7 +608,7 @@ extension GraphImpl {
     // x.y()
     if let memberAccessExpr = calledExpr as? MemberAccessExprSyntax {
       guard let base = memberAccessExpr.base else {
-        fatalError("Is it possible that `base` is nil ?")
+        fatalError("Is it possible that `base` is nil ? \(memberAccessExpr)")
       }
       
       let baseType = resolveExprType(base)
@@ -663,10 +665,13 @@ extension GraphImpl {
     return nil
   }
   
-  func extensionsWithName(_ name: [String]) -> [TypeDecl] {
+  func getAllTypeDeclarations(from typeDecl: TypeDecl) -> [TypeDecl] {
+    return getAllTypeDeclarations(from: typeDecl.name)
+  }
+  
+  func getAllTypeDeclarations(from name: [String]) -> [TypeDecl] {
     return topLevelTypeDecls.filter { typeDecl in
-      return typeDecl.scope.type == .extensionNode
-        && typeDecl.tokens.map { $0.text } == name
+      return typeDecl.name == name
     }
   }
   
