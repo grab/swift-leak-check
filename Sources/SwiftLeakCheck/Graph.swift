@@ -64,6 +64,7 @@ final class GraphImpl: Graph {
     }
   }
   
+  private var mapScopeNodeToScope = [ScopeNode: Scope]()
   private var cachedSymbolResolved = [Symbol: SymbolResolve]()
   private var cachedReferencesToVariable = [Variable: [IdentifierExprSyntax]]()
   private var cachedVariableType = [Variable: TypeResolve]()
@@ -74,6 +75,14 @@ final class GraphImpl: Graph {
   let sourceFileScope: SourceFileScope
   init(sourceFileScope: SourceFileScope) {
     self.sourceFileScope = sourceFileScope
+    buildScopeNodeToScopeMapping(root: sourceFileScope)
+  }
+  
+  private func buildScopeNodeToScopeMapping(root: Scope) {
+    mapScopeNodeToScope[root.scopeNode] = root
+    root.childScopes.forEach { child in
+      buildScopeNodeToScopeMapping(root: child)
+    }
   }
 }
 
@@ -110,18 +119,10 @@ extension GraphImpl {
   }
   
   func scope(for scopeNode: ScopeNode) -> Scope {
-    guard let result = _findScope(scopeNode: scopeNode, recursivelyFrom: sourceFileScope) else {
+    guard let result = mapScopeNodeToScope[scopeNode] else {
       fatalError("Can't find the scope of node at \(scopeNode.node.position.prettyDescription)")
     }
     return result
-  }
-  
-  private func _findScope(scopeNode: ScopeNode, recursivelyFrom root: Scope) -> Scope? {
-    if root.scopeNode == scopeNode {
-      return root
-    }
-    
-    return root.childScopes.lazy.compactMap { self._findScope(scopeNode: scopeNode, recursivelyFrom: $0) }.first
   }
   
   func closetScopeThatCanResolveSymbol(_ symbol: Symbol) -> Scope {
