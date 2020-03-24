@@ -251,19 +251,21 @@ open class Scope: Hashable, CustomStringConvertible {
   }
   
   func getVariable(_ node: IdentifierExprSyntax) -> Variable? {
-    for variable in variables {
-      // Special case:
-      // guard let `x` = x else { ... }
+    let name = node.identifier.text
+    for variable in variables.filter({ $0.name == name }) {
+      // Special case: guard let `x` = x else { ... }
+      // or: let x = x.doSmth()
       // Here x on the right cannot be resolved to x on the left
       if case let .binding(_, valueNode) = variable.raw,
-        valueNode != nil && valueNode! == node {
+        valueNode != nil && node.isDescendent(of: valueNode!) {
         continue
       }
       
-      if variable.raw.token.isBefore(node) || canUseVariableOrFuncInAnyOrder {
-        if variable.name == node.identifier.text {
-          return variable
-        }
+      if variable.raw.token.isBefore(node) {
+        return variable
+      } else if !canUseVariableOrFuncInAnyOrder {
+        // Stop
+        break
       }
     }
     
