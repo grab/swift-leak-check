@@ -297,18 +297,19 @@ extension GraphImpl {
     case let identifier as IdentifierExprSyntax: // doSmth(...) or A(...)
       return _findFunction(symbol: .identifier(identifier), funcCallExpr: funcCallExpr)
     case let memberAccessExpr as MemberAccessExprSyntax: // a.doSmth(...)
-      guard let base = memberAccessExpr.base else {
-        assert(false, "Is it possible that `base` is nil ? \(memberAccessExpr)")
+      if let base = memberAccessExpr.base {
+        if couldReferenceSelf(base) {
+          return _findFunction(symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr)
+        }
+        if case let .type(typeDecl) = resolveExprType(base) {
+          return _findFunction(symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr, in: typeDecl.scope)
+        }
+        return nil
+      } else {
+        // Base is omitted when the type can be inferred.
+        // For eg, we can say: let s: String = .init(...)
         return nil
       }
-      if couldReferenceSelf(base) {
-        return _findFunction(symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr)
-      }
-      if case let .type(typeDecl) = resolveExprType(base) {
-        return _findFunction(symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr, in: typeDecl.scope)
-      }
-      
-      return nil
       
     case is ImplicitMemberExprSyntax, // .create { ... }
          is OptionalChainingExprSyntax: // optional closure
@@ -607,22 +608,23 @@ extension GraphImpl {
     
     // x.y()
     if let memberAccessExpr = calledExpr as? MemberAccessExprSyntax {
-      guard let base = memberAccessExpr.base else {
-        fatalError("Is it possible that `base` is nil ? \(memberAccessExpr)")
+      if let base = memberAccessExpr.base {
+        let baseType = resolveExprType(base)
+        if _isCollection(baseType) {
+          let funcName = memberAccessExpr.name.text
+          if ["map", "flatMap", "compactMap", "enumerated"].contains(funcName) {
+            return .sequence(elementType: .unknown)
+          }
+          if ["filter", "sorted"].contains(funcName) {
+            return baseType
+          }
+        }
+      } else {
+        // Base is omitted when the type can be inferred.
+        // For eg, we can say: let s: String = .init(...)
+        return .unknown
       }
       
-      let baseType = resolveExprType(base)
-      if _isCollection(baseType) {
-        let funcName = memberAccessExpr.name.text
-        if ["map", "flatMap", "compactMap", "enumerated"].contains(funcName) {
-          return .sequence(elementType: .unknown)
-        }
-        if ["filter", "sorted"].contains(funcName) {
-          return baseType
-        }
-      }
-      
-      return .unknown
     }
     
     return .unknown
