@@ -14,13 +14,32 @@ open class DispatchQueueRule: BaseNonEscapeRule {
   
   private let signatures: [FunctionSignature] = [
     FunctionSignature(name: "async", params: [
+      FunctionParam(name: "group", canOmit: true),
+      FunctionParam(name: "qos", canOmit: true),
+      FunctionParam(name: "flags", canOmit: true),
+      FunctionParam(name: "execute", isClosure: true)
+    ]),
+    FunctionSignature(name: "async", params: [
+      FunctionParam(name: "group", canOmit: true),
+      FunctionParam(name: "execute")
+    ]),
+    FunctionSignature(name: "sync", params: [
+      FunctionParam(name: "flags", canOmit: true),
       FunctionParam(name: "execute", isClosure: true)
     ]),
     FunctionSignature(name: "sync", params: [
-      FunctionParam(name: "execute", isClosure: true)
+      FunctionParam(name: "execute")
     ]),
     FunctionSignature(name: "asyncAfter", params: [
       FunctionParam(name: "deadline"),
+      FunctionParam(name: "qos", canOmit: true),
+      FunctionParam(name: "flags", canOmit: true),
+      FunctionParam(name: "execute", isClosure: true)
+    ]),
+    FunctionSignature(name: "asyncAfter", params: [
+      FunctionParam(name: "wallDeadline"),
+      FunctionParam(name: "qos", canOmit: true),
+      FunctionParam(name: "flags", canOmit: true),
       FunctionParam(name: "execute", isClosure: true)
     ])
   ]
