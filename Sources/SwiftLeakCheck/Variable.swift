@@ -241,7 +241,7 @@ public class Variable: Hashable, CustomStringConvertible {
         return _variablesFromPattern(valueBindingPattern.valuePattern)
       }
       
-      assertionFailure("Unhandled case")
+      assert(false, "Unhandled pattern in for statement: \(pattern)")
       return []
     }
     
