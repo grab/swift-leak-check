@@ -687,6 +687,7 @@ extension GraphImpl {
 extension GraphImpl {
   func isClosureEscape(_ closure: ClosureExprSyntax, nonEscapeRules: [NonEscapeRule]) -> Bool {
     func _isClosureEscape(_ expr: ExprSyntax, isFuncParam: Bool) -> Bool {
+      // check cache
       if let closureNode = expr as? ClosureExprSyntax, let cachedResult = cachedClosureEscapeCheck[closureNode] {
         return cachedResult
       }
@@ -712,7 +713,7 @@ extension GraphImpl {
         return false // Not escape
       }
       
-      // let x = {...}
+      // let x = closure
       // `x` may be used anywhere
       if let variable = enclosingScope(for: expr).getVariableBindingTo(expr: expr) {
         let references = getVariableReferences(variable: variable)
@@ -721,8 +722,6 @@ extension GraphImpl {
             return true // Escape
           }
         }
-        
-        return false
       }
       
       // Used as argument in function call: doSmth(a, b, c: {...}) or doSmth(a, b) {...}
@@ -759,17 +758,19 @@ extension GraphImpl {
           return false
         } else {
           // Can't resolve the function
+          // Use custom rules
+          for rule in nonEscapeRules {
+            if rule.isNonEscape(closureNode: expr, graph: self) {
+              return false
+            }
+          }
+          
+          // Still can't figure out using custom rules, assume closure is escaping
+          return true
         }
       }
       
-      // Finally, fallback to rules
-      for rule in nonEscapeRules {
-        if rule.isNonEscape(closureNode: expr, graph: self) {
-          return false // Not escape
-        }
-      }
-      
-      return true // Don't know
+      return false // It's unlikely the closure is escaping
     }
     
     let result = _isClosureEscape(closure, isFuncParam: false)
