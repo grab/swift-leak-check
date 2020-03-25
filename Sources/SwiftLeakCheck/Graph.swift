@@ -520,7 +520,7 @@ extension GraphImpl {
   
   func resolveType(_ type: TypeSyntax) -> TypeResolve {
     if type.isOptional {
-      return .optional(base: resolveType(type.wrapped))
+      return .optional(base: resolveType(type.wrappedType))
     }
     
     switch type {

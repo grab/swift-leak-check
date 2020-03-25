@@ -20,13 +20,13 @@ public indirect enum TypeResolve: Equatable {
   case unknown
   
   public var isOptional: Bool {
-    return self != self.wrapped
+    return self != self.wrappedType
   }
   
-  public var wrapped: TypeResolve {
+  public var wrappedType: TypeResolve {
     switch self {
     case .optional(let base):
-      return base.wrapped
+      return base.wrappedType
     case .sequence,
        .dict,
        .tuple,

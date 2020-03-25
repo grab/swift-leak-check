@@ -106,7 +106,7 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
     // Eg: base.doSmth()
     // We check if base is UIViewController
     let typeResolve = graph.resolveExprType(base)
-    switch typeResolve.wrapped {
+    switch typeResolve.wrappedType {
     case .type(let typeDecl):
       let allTypeDecls = graph.getAllTypeDeclarations(from: typeDecl)
       for typeDecl in allTypeDecls {

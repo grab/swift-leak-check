@@ -124,7 +124,7 @@ public extension TypeSyntax {
     return self is OptionalTypeSyntax || self is ImplicitlyUnwrappedOptionalTypeSyntax
   }
   
-  var wrapped: TypeSyntax {
+  var wrappedType: TypeSyntax {
     if let optionalType = self as? OptionalTypeSyntax {
       return optionalType.wrappedType
     }
@@ -135,7 +135,7 @@ public extension TypeSyntax {
   }
   
   var tokens: [TokenSyntax]? {
-    if self == wrapped {
+    if self == wrappedType {
       if let type = self as? MemberTypeIdentifierSyntax {
         if let base = type.baseType.tokens {
           return base + [type.name]
@@ -147,7 +147,7 @@ public extension TypeSyntax {
       }
       return nil
     }
-    return wrapped.tokens
+    return wrappedType.tokens
   }
   
   var name: [String] {

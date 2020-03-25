@@ -67,7 +67,7 @@ open class DispatchQueueRule: BaseNonEscapeRule {
     let isDispatchQueuePredicate: ExprSyntaxPredicate = .init { expr -> Bool in
       guard let expr = expr else { return false }
       let typeResolve = graph.resolveExprType(expr)
-      switch typeResolve.wrapped {
+      switch typeResolve.wrappedType {
       case .name(let name):
         return self.isDispatchQueueType(name: name)
       case .type(let typeDecl):
