@@ -43,6 +43,14 @@ class X {
     animateIfNeeded(animated: animated, updateBlock: {
       self.doSmth()
     })
+    
+    stopActionAnimation {
+      UIView.animate(withDuration: 0.2, delay: 0, options: [.transitionCrossDissolve, .beginFromCurrentState], animations: {
+        self.doSmth()
+      }) { (_) in
+        self.doSmth()
+      }
+    }
   }
   
   private func animateSmth(_ completion: @escaping () -> Void) {
@@ -55,6 +63,19 @@ class X {
                    completion: { _ in completion() })
   }
 
+  private func stopActionAnimation(_ completion: (() -> Void)? = nil) {
+    dismissActionAnimation(completion)
+  }
+  
+  private func dismissActionAnimation(_ completion: (() -> Void)? = nil) {
+    UIView.animate(withDuration: actionAnimationOut / 2, delay: actionDelayOut, options: .beginFromCurrentState, animations: {
+      self.doSmth()
+    }) { (_) in
+      self.doSmth()
+      completion?()
+    }
+  }
+  
   private func doSmth() {}
 }
 

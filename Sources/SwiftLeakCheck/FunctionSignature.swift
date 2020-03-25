@@ -136,9 +136,17 @@ public struct FunctionParam: Hashable {
   public init(param: FunctionParameterSyntax) {
     name = (param.firstName?.text == "_" ? nil : param.firstName?.text)
     secondName = param.secondName?.text
-    isClosure = param.type is FunctionTypeSyntax
-      || (param.type as? AttributedTypeSyntax)?.baseType is FunctionTypeSyntax
+    
+    isClosure = (param.type?.isClosure == true)
     canOmit = param.defaultArgument != nil
+  }
+}
+
+private extension TypeSyntax {
+  var isClosure: Bool {
+    return wrapped is FunctionTypeSyntax
+      || (wrapped as? AttributedTypeSyntax)?.baseType.isClosure == true
+      || (wrapped as? TupleTypeSyntax).flatMap { $0.elements.count == 1 && $0.elements[0].type.isClosure } == true
   }
 }
 

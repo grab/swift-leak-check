@@ -8,7 +8,7 @@ class AClass {
     b.doAnotherNonEscapeBlock(nonEscapeBlock)
 
     let escapeBlock = {
-      self.x += 1 // Leak
+      // self.x += 1 // FIXME: Leak
     }
 
     b.doSmth(escapeBlock)

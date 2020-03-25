@@ -2,6 +2,7 @@ class AClass {
   var x = 1
   
   func main() {
+    
     let block = { [weak self] in
       guard let strongSelf = self else { return }
       strongSelf.x = strongSelf.x + 1
@@ -20,15 +21,10 @@ class AClass {
 
     // So this `block` will be evaluated as escaping
     someObject.doSmth(block)
-
-    doSmth(tuple: (
-        value: 1,
-        closure: {
-          self.x // Leak
-        }
-      ),
-      output: self
-    )
+    
+    doSmth(closure: {
+      self.x // Leak
+    }, output: self)
 
     doSmth { [unowned self] in
       self.x
