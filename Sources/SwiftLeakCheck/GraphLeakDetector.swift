@@ -58,9 +58,9 @@ private final class LeakSyntaxVisitor: BaseGraphVistor {
       return
     }
     
-    var currentScope = graph.closetScopeThatCanResolveSymbol(.identifier(node))
+    var currentScope: Scope! = graph.closetScopeThatCanResolveSymbol(.identifier(node))
     var isEscape = false
-    while true {
+    while currentScope != nil {
       if let variable = currentScope.getVariable(node) {
         if !isEscape {
           // No leak
@@ -91,11 +91,7 @@ private final class LeakSyntaxVisitor: BaseGraphVistor {
         isEscape = graph.isClosureEscape(closureNode, nonEscapeRules: nonEscapeRules)
       }
 
-      if let parent = currentScope.parent {
-        currentScope = parent
-      } else {
-        break
-      }
+      currentScope = currentScope.parent
     }
 
     if isEscape {

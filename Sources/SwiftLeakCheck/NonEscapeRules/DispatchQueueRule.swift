@@ -71,7 +71,7 @@ open class DispatchQueueRule: BaseNonEscapeRule {
       case .name(let name):
         return self.isDispatchQueueType(name: name)
       case .type(let typeDecl):
-        let allTypeDecls = graph.getAllTypeDeclarations(from: typeDecl)
+        let allTypeDecls = graph.getAllRelatedTypeDecls(from: typeDecl)
         for typeDecl in allTypeDecls {
           if self.isDispatchQueueType(typeDecl: typeDecl) {
             return true
@@ -100,7 +100,7 @@ open class DispatchQueueRule: BaseNonEscapeRule {
   }
   
   private func isDispatchQueueType(name: [String]) -> Bool {
-    return name.last == "DispatchQueue"
+    return name == ["DispatchQueue"]
   }
   
   private func isDispatchQueueType(typeDecl: TypeDecl) -> Bool {
@@ -108,7 +108,7 @@ open class DispatchQueueRule: BaseNonEscapeRule {
       return true
     }
     for inheritedType in (typeDecl.inheritanceTypes ?? []) {
-      if self.isDispatchQueueType(name: inheritedType.typeName.name) {
+      if self.isDispatchQueueType(name: inheritedType.typeName.name ?? []) {
         return true
       }
     }

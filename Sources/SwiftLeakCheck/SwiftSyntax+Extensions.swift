@@ -16,10 +16,14 @@ public extension Syntax {
   }
   
   func isDescendent(of node: Syntax) -> Bool {
-    if self == node { return true }
+    return hasAncestor { $0 == node }
+  }
+  
+  func hasAncestor(_ predicate: (Syntax) -> Bool) -> Bool {
+    if predicate(self) { return true }
     var parent = self.parent
     while parent != nil {
-      if parent! == node {
+      if predicate(parent!) {
         return true
       }
       parent = parent?.parent
@@ -150,8 +154,8 @@ public extension TypeSyntax {
     return wrappedType.tokens
   }
   
-  var name: [String] {
-    return (tokens ?? []).map { $0.text }
+  var name: [String]? {
+    return tokens?.map { $0.text }
   }
 }
 

@@ -4,6 +4,7 @@ class AClass {
       self.x += 1
     }
     let b = BClass()
+    b.c(nonEscapeBlock)
     b.doNonEscapeBlock(nonEscapeBlock)
     b.doAnotherNonEscapeBlock(nonEscapeBlock)
 
@@ -18,7 +19,7 @@ class AClass {
   var y = [1, 2, 3]
 }
 
-class BClass {
+class BClass: CClass {
   var completion: (() -> Void)?
 
   func doSmth(_ completion: @escaping () -> Void) {
@@ -37,3 +38,8 @@ class BClass {
   }
 }
 
+class CClass {
+  func c(_ completion: @escaping () -> Void) {
+    self.completion = completion
+  }
+}

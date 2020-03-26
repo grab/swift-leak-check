@@ -32,13 +32,13 @@ public protocol Graph {
   
   /// Find the nearest scope to a symbol, that can resolve the definition of that symbol
   /// Usually it is the enclosing scope of the symbol
-  func closetScopeThatCanResolveSymbol(_ symbol: Symbol) -> Scope
+  func closetScopeThatCanResolveSymbol(_ symbol: Symbol) -> Scope?
   
   func resolveExprType(_ expr: ExprSyntax) -> TypeResolve
   func resolveVariableType(_ variable: Variable) -> TypeResolve
   func resolveType(_ type: TypeSyntax) -> TypeResolve
-  func getAllTypeDeclarations(from typeDecl: TypeDecl) -> [TypeDecl]
-  func getAllTypeDeclarations(from name: [String]) -> [TypeDecl]
+  func getAllRelatedTypeDecls(from typeDecl: TypeDecl) -> [TypeDecl]
+  func getAllRelatedTypeDecls(from typeResolve: TypeResolve) -> [TypeDecl]
   
   func resolveVariable(_ identifier: IdentifierExprSyntax) -> Variable?
   func getVariableReferences(variable: Variable) -> [IdentifierExprSyntax]
@@ -70,7 +70,6 @@ final class GraphImpl: Graph {
   private var cachedVariableType = [Variable: TypeResolve]()
   private var cachedFunCallExprType = [FunctionCallExprSyntax: TypeResolve]()
   private var cachedClosureEscapeCheck = [ClosureExprSyntax: Bool]()
-  private var cachedScopeWithExtenionsMapping = [String: Set<Scope>]()
   
   let sourceFileScope: SourceFileScope
   init(sourceFileScope: SourceFileScope) {
@@ -125,59 +124,29 @@ extension GraphImpl {
     return result
   }
   
-  func closetScopeThatCanResolveSymbol(_ symbol: Symbol) -> Scope {
-    var scope = enclosingScope(for: symbol.node)
+  func closetScopeThatCanResolveSymbol(_ symbol: Symbol) -> Scope? {
+    let scope = enclosingScope(for: symbol.node)
     // Special case when node is a closure capture item, ie `{ [weak self] in`
     // We need to examine node wrt closure's parent
     if symbol.node.parent is ClosureCaptureItemSyntax {
       if let parentScope = scope.parent {
-        scope = parentScope
+        return parentScope
       } else {
         fatalError("Can't happen")
       }
     }
     
+    if symbol.node.hasAncestor({ $0 is InheritedTypeSyntax }) {
+      return scope.parent
+    }
+    
+    if symbol.node.hasAncestor({ $0 is ExtensionDeclSyntax && symbol.node.isDescendent(of: ($0 as! ExtensionDeclSyntax).extendedType)}) {
+      return scope.parent
+    }
+    
     return scope
   }
-  
-  private func _getScopeAndAllExtensions(_ scope: Scope) -> Set<Scope> {
-    guard let typePath = _getFullTypePathForScope(scope) else {
-      return Set([scope])
-    }
-    
-    let name = typePath.map { $0.text }.joined(separator: ".")
-    
-    if let result = cachedScopeWithExtenionsMapping[name] {
-      return result
-    }
-    
-    sourceFileScope.childScopes.forEach { scope in
-      if let typePath = _getFullTypePathForScope(scope) {
-        let name = typePath.map { $0.text }.joined(separator: ".")
-        var set = cachedScopeWithExtenionsMapping[name] ?? Set()
-        set.insert(scope)
-        cachedScopeWithExtenionsMapping[name] = set
-      }
-    }
-    
-    return cachedScopeWithExtenionsMapping[name] ?? Set([scope])
-  }
-  
-  // For eg, type path for C in be example below is A.B.C
-  // class A {
-  //   struct B {
-  //     enum C {
-  private func _getFullTypePathForScope(_ scope: Scope) -> [TokenSyntax]? {
-    if scope.parent == nil { // source file
-      return []
-    } else if let tokens = scope.typeDecl?.tokens, let parentTokens = _getFullTypePathForScope(scope.parent!) {
-      return parentTokens + tokens
-    } else {
-      return nil
-    }
-  }
 }
-
 
 // MARK: - Symbol resolve
 extension GraphImpl {
@@ -211,8 +180,15 @@ extension GraphImpl {
                    options: [ResolveSymbolOption] = ResolveSymbolOption.allCases,
                    in scope: Scope,
                    onResult: (SymbolResolve) -> Bool) -> SymbolResolve? {
-    let scopeWithAllExtensions = _getScopeAndAllExtensions(scope)
-    for scope in scopeWithAllExtensions {
+    
+    let scopesWithRelatedTypeDecl: [Scope]
+    if let typeDecl = scope.typeDecl {
+      scopesWithRelatedTypeDecl = getAllRelatedTypeDecls(from: typeDecl).map { $0.scope }
+    } else {
+      scopesWithRelatedTypeDecl = [scope]
+    }
+    
+    for scope in scopesWithRelatedTypeDecl {
       if options.contains(.variable) {
         if case let .identifier(node) = symbol, let variable = scope.getVariable(node) {
           let result: SymbolResolve = .variable(variable)
@@ -302,10 +278,8 @@ extension GraphImpl {
         if couldReferenceSelf(base) {
           return _findFunction(symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr)
         }
-        if case let .type(typeDecl) = resolveExprType(base) {
-          return _findFunction(symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr, in: typeDecl.scope)
-        }
-        return nil
+        let typeDecls = getAllRelatedTypeDecls(from: resolveExprType(base))
+        return _findFunction(from: typeDecls, symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr)
       } else {
         // Base is omitted when the type can be inferred.
         // For eg, we can say: let s: String = .init(...)
@@ -357,29 +331,18 @@ extension GraphImpl {
     return result
   }
   
-  private func _findFunction(symbol: Symbol, funcCallExpr: FunctionCallExprSyntax,  in scope: Scope)
+  private func _findFunction(from typeDecls: [TypeDecl], symbol: Symbol, funcCallExpr: FunctionCallExprSyntax)
     -> (Function, Function.MatchResult.MappingInfo)? {
       
-      var result: (Function, Function.MatchResult.MappingInfo)?
-      
-      _ = _findSymbol(symbol, options: [.function], in: scope, onResult: { resolve in
-        switch resolve {
-        case .variable, .typeDecl:
-          assert(false, "Can't happen")
-          return false
-        case .function(let function):
-          switch function.match(funcCallExpr) {
-          case .argumentMismatch,
-               .nameMismatch:
-            return false
-          case .matched(let info):
-            result = (function, info)
-            return true
+      for typeDecl in typeDecls {
+        for function in typeDecl.scope.getFunctionWithSymbol(symbol) {
+          if case let .matched(info) = function.match(funcCallExpr) {
+            return (function, info)
           }
         }
-      })
+      }
       
-      return result
+      return nil
   }
 }
 
@@ -433,16 +396,16 @@ extension GraphImpl {
     }
     
     if expr is IntegerLiteralExprSyntax {
-      return getAllTypeDeclarations(from: ["Int"]).first.flatMap { .type($0) } ?? .name(["Int"])
+      return _getAllExtensions(name: ["Int"]).first.flatMap { .type($0) } ?? .name(["Int"])
     }
     if expr is StringLiteralExprSyntax {
-      return getAllTypeDeclarations(from: ["String"]).first.flatMap { .type($0) } ?? .name(["String"])
+      return _getAllExtensions(name: ["String"]).first.flatMap { .type($0) } ?? .name(["String"])
     }
     if expr is FloatLiteralExprSyntax {
-      return getAllTypeDeclarations(from: ["Float"]).first.flatMap { .type($0) } ?? .name(["Float"])
+      return _getAllExtensions(name: ["Float"]).first.flatMap { .type($0) } ?? .name(["Float"])
     }
     if expr is BooleanLiteralExprSyntax {
-      return getAllTypeDeclarations(from: ["Bool"]).first.flatMap { .type($0) } ?? .name(["Bool"])
+      return _getAllExtensions(name: ["Bool"]).first.flatMap { .type($0) } ?? .name(["Bool"])
     }
     
     if let tupleExpr = expr as? TupleExprSyntax {
@@ -531,14 +494,13 @@ extension GraphImpl {
     case let tupleType as TupleTypeSyntax:
       return .tuple(tupleType.elements.map { resolveType($0.type) })
     default:
-      if let tokens = type.tokens {
-        if let typeDecl = resolveTypeDecl(tokens: tokens) {
-          return .type(typeDecl)
-        } else {
-          return .name(tokens.map { $0.text })
-        }
+      if let tokens = type.tokens, let typeDecl = resolveTypeDecl(tokens: tokens) {
+        return .type(typeDecl)
+      } else if let name = type.name {
+        return .name(name)
+      } else {
+        return .unknown
       }
-      return .unknown
     }
   }
   
@@ -640,7 +602,7 @@ extension GraphImpl {
       return nil
     }
     
-    return resolveTypeDecl(token: tokens[0], onResult: { typeDecl in
+    return _resolveTypeDecl(token: tokens[0], onResult: { typeDecl in
       var currentScope = typeDecl.scope
       for token in tokens[1...] {
         if let scope = currentScope.getTypeDecl(name: token.text).first?.scope {
@@ -653,7 +615,7 @@ extension GraphImpl {
     })
   }
   
-  func resolveTypeDecl(token: TokenSyntax, onResult: (TypeDecl) -> Bool) -> TypeDecl? {
+  private func _resolveTypeDecl(token: TokenSyntax, onResult: (TypeDecl) -> Bool) -> TypeDecl? {
     let result =  _findSymbol(.token(token), options: [.typeDecl]) { resolve in
       if case let .typeDecl(typeDecl) = resolve {
         return onResult(typeDecl)
@@ -668,18 +630,68 @@ extension GraphImpl {
     return nil
   }
   
-  func getAllTypeDeclarations(from typeDecl: TypeDecl) -> [TypeDecl] {
-    return getAllTypeDeclarations(from: typeDecl.name)
-  }
-  
-  func getAllTypeDeclarations(from name: [String]) -> [TypeDecl] {
-    return topLevelTypeDecls.filter { typeDecl in
-      return typeDecl.name == name
+  func getAllRelatedTypeDecls(from: TypeDecl) -> [TypeDecl] {
+    var result: [TypeDecl] = _getAllExtensions(typeDecl: from)
+    if !from.isExtension {
+      result = [from] + result
+    } else {
+      if let originalDecl = resolveTypeDecl(tokens: from.tokens) {
+        result = [originalDecl] + result
+      }
+    }
+    
+    return result + result.flatMap { typeDecl -> [TypeDecl] in
+      guard let inheritanceTypes = typeDecl.inheritanceTypes else {
+        return []
+      }
+      
+      return inheritanceTypes
+        .compactMap { resolveTypeDecl(tokens: $0.typeName.tokens ?? []) }
+        .flatMap { getAllRelatedTypeDecls(from: $0) }
     }
   }
   
-  var topLevelTypeDecls: [TypeDecl] {
-    return sourceFileScope.childTypeDecls
+  func getAllRelatedTypeDecls(from: TypeResolve) -> [TypeDecl] {
+    switch from.wrappedType {
+    case .type(let typeDecl):
+      return getAllRelatedTypeDecls(from: typeDecl)
+    case .sequence:
+      return _getAllExtensions(name: ["Array"]) + _getAllExtensions(name: ["Collection"])
+    case .dict:
+      return _getAllExtensions(name: ["Dictionary"]) + _getAllExtensions(name: ["Collection"])
+    case .name, .tuple, .unknown:
+      return []
+    case .optional:
+      // Can't happen
+      return []
+    }
+  }
+  
+  private func _getAllExtensions(typeDecl: TypeDecl) -> [TypeDecl] {
+    guard let name = _getTypeDeclFullPath(typeDecl)?.map({ $0.text }) else { return [] }
+    return _getAllExtensions(name: name)
+  }
+  
+  private func _getAllExtensions(name: [String]) -> [TypeDecl] {
+    return sourceFileScope.childScopes
+    .compactMap { $0.typeDecl }
+    .filter { $0.isExtension && $0.name == name }
+  }
+  
+  // For eg, type path for C in be example below is A.B.C
+  // class A {
+  //   struct B {
+  //     enum C {
+  // Returns nil if the type is nested inside non-type entity like function
+  private func _getTypeDeclFullPath(_ typeDecl: TypeDecl) -> [TokenSyntax]? {
+    let tokens = typeDecl.tokens
+    if typeDecl.scope.parent?.type == .sourceFileNode {
+      return tokens
+    }
+    if let parentTypeDecl = typeDecl.scope.parent?.typeDecl, let parentTokens = _getTypeDeclFullPath(parentTypeDecl) {
+      return parentTokens + tokens
+    }
+    return nil
   }
 }
 
@@ -784,6 +796,10 @@ extension GraphImpl {
   }
   
   private func _isCollection(_ type: TypeResolve) -> Bool {
+    let isCollectionTypeName: ([String]) -> Bool = { (name: [String]) in
+      return name == ["Array"] || name == ["Dictionary"] || name == ["Set"]
+    }
+    
     switch type {
     case .tuple,
          .unknown:
@@ -793,9 +809,23 @@ extension GraphImpl {
       return true
     case .optional(let base):
       return _isCollection(base)
-    case .name:
-      return false
-    case .type:
+    case .name(let name):
+      return isCollectionTypeName(name)
+    case .type(let typeDecl):
+      let allTypeDecls = getAllRelatedTypeDecls(from: typeDecl)
+      for typeDecl in allTypeDecls {
+        if isCollectionTypeName(typeDecl.name) {
+          return true
+        }
+        
+        for inherritedName in (typeDecl.inheritanceTypes?.map { $0.typeName.name ?? [""] } ?? []) {
+          // If it extends any of the collection types or implements Collection protocol
+          if isCollectionTypeName(inherritedName) || inherritedName == ["Collection"] {
+            return true
+          }
+        }
+      }
+      
       return false
     }
   }

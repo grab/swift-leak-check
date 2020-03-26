@@ -79,7 +79,7 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
     
     let inheritantTypes = (typeDecl.inheritanceTypes ?? []).map { $0.typeName }
     for inheritantType in inheritantTypes {
-      if isUIViewControllerType(name: inheritantType.name) {
+      if isUIViewControllerType(name: inheritantType.name ?? []) {
         return true
       }
     }
@@ -108,7 +108,7 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
     let typeResolve = graph.resolveExprType(base)
     switch typeResolve.wrappedType {
     case .type(let typeDecl):
-      let allTypeDecls = graph.getAllTypeDeclarations(from: typeDecl)
+      let allTypeDecls = graph.getAllRelatedTypeDecls(from: typeDecl)
       for typeDecl in allTypeDecls {
         if isUIViewControllerType(typeDecl: typeDecl) {
           return true
