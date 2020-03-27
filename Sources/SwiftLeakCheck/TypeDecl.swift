@@ -25,4 +25,8 @@ public struct TypeDecl: Equatable {
   public var name: [String] {
     return tokens.map { $0.text }
   }
+  
+  public var isExtension: Bool {
+    return scope.type == .extensionNode
+  }
 }

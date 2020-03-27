@@ -29,9 +29,17 @@ class Y {
       .map { num in self.x + num }
       .sorted { (a, b) in a + self.x > b }
       .flatMap { _ in self.getArray() }
+      .customMapping { _ in self.x + 1 }
+      .map { _ in self.x + 1 }
   }
 
   func getArray() -> [Int] {
     return [1, 2, 3]
   }
+}
+
+extension Array {
+   func customMapping<T>(_ block: (Element) -> T) -> [Element] {
+      return map(block)
+   }
 }
