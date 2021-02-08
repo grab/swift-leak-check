@@ -9,7 +9,6 @@
 //
 
 import SwiftSyntax
-import SourceKittenFramework
 import Foundation
 
 public protocol LeakDetector {

@@ -31,92 +31,106 @@ public enum ScopeNode: Hashable, CustomStringConvertible {
   case switchCaseNode(SwitchCaseSyntax)
   
   public static func from(node: Syntax) -> ScopeNode? {
-    switch node {
-    case let sourceFileNode as SourceFileSyntax:
+    if let sourceFileNode = node.as(SourceFileSyntax.self) {
       return .sourceFileNode(sourceFileNode)
-      
-    case let classNode as ClassDeclSyntax:
+    }
+    
+    if let classNode = node.as(ClassDeclSyntax.self) {
       return .classNode(classNode)
+    }
       
-    case let structNode as StructDeclSyntax:
+    if let structNode = node.as(StructDeclSyntax.self) {
       return .structNode(structNode)
+    }
       
-    case let enumNode as EnumDeclSyntax:
+    if let enumNode = node.as(EnumDeclSyntax.self) {
       return .enumNode(enumNode)
+    }
       
-    case let enumCaseNode as EnumCaseDeclSyntax:
+    if let enumCaseNode = node.as(EnumCaseDeclSyntax.self) {
       return .enumCaseNode(enumCaseNode)
+    }
       
-    case let extensionNode as ExtensionDeclSyntax:
-      assert(node.enclosingScopeNode?.type == .sourceFileNode)
+    if let extensionNode = node.as(ExtensionDeclSyntax.self) {
       return .extensionNode(extensionNode)
-      
-    case let funcNode as FunctionDeclSyntax:
+    }
+    
+    if let funcNode = node.as(FunctionDeclSyntax.self) {
       return .funcNode(funcNode)
+    }
       
-    case let initialiseNode as InitializerDeclSyntax:
-      return.initialiseNode(initialiseNode)
+    if let initialiseNode = node.as(InitializerDeclSyntax.self) {
+      return .initialiseNode(initialiseNode)
+    }
       
-    case let closureNode as ClosureExprSyntax:
+    if let closureNode = node.as(ClosureExprSyntax.self) {
       return .closureNode(closureNode)
+    }
       
-    case let codeBlockNode as CodeBlockSyntax where codeBlockNode.parent is IfStmtSyntax:
-      let parent = codeBlockNode.parent as! IfStmtSyntax
+    if let codeBlockNode = node.as(CodeBlockSyntax.self), codeBlockNode.parent?.is(IfStmtSyntax.self) == true {
+      let parent = (codeBlockNode.parent?.as(IfStmtSyntax.self))!
       if codeBlockNode == parent.body {
         return .ifBlockNode(codeBlockNode, parent)
-      } else if codeBlockNode == parent.elseBody as? CodeBlockSyntax {
+      } else if codeBlockNode == parent.elseBody?.as(CodeBlockSyntax.self) {
         return .elseBlockNode(codeBlockNode, parent)
       }
       return nil
-      
-    case let guardNode as GuardStmtSyntax:
-      return .guardNode(guardNode)
-      
-    case let forLoopNode as ForInStmtSyntax:
-      return .forLoopNode(forLoopNode)
-      
-    case let whileLoopNode as WhileStmtSyntax:
-      return .whileLoopNode(whileLoopNode)
-      
-    case let subscriptNode as SubscriptDeclSyntax:
-      return .subscriptNode(subscriptNode)
-
-    case let accessorNode as AccessorDeclSyntax:
-      return .accessorNode(accessorNode)
-      
-    case let codeBlockNode as CodeBlockSyntax where codeBlockNode.parent is PatternBindingSyntax
-        && codeBlockNode.parent?.parent is PatternBindingListSyntax
-        && codeBlockNode.parent?.parent?.parent is VariableDeclSyntax:
-      return .variableDeclNode(codeBlockNode)
-      
-    case let switchCaseNode as SwitchCaseSyntax:
-      return .switchCaseNode(switchCaseNode)
-      
-    default:
-      return nil
     }
+      
+    if let guardNode = node.as(GuardStmtSyntax.self) {
+      return .guardNode(guardNode)
+    }
+      
+    if let forLoopNode = node.as(ForInStmtSyntax.self) {
+      return .forLoopNode(forLoopNode)
+    }
+      
+    if let whileLoopNode = node.as(WhileStmtSyntax.self) {
+      return .whileLoopNode(whileLoopNode)
+    }
+      
+    if let subscriptNode = node.as(SubscriptDeclSyntax.self) {
+      return .subscriptNode(subscriptNode)
+    }
+
+    if let accessorNode = node.as(AccessorDeclSyntax.self) {
+      return .accessorNode(accessorNode)
+    }
+      
+    if let codeBlockNode = node.as(CodeBlockSyntax.self),
+       codeBlockNode.parent?.is(PatternBindingSyntax.self) == true,
+       codeBlockNode.parent?.parent?.is(PatternBindingListSyntax.self) == true,
+       codeBlockNode.parent?.parent?.parent?.is(VariableDeclSyntax.self) == true {
+      return .variableDeclNode(codeBlockNode)
+    }
+      
+    if let switchCaseNode = node.as(SwitchCaseSyntax.self) {
+      return .switchCaseNode(switchCaseNode)
+    }
+    
+    return nil
   }
   
   public var node: Syntax {
     switch self {
-    case .sourceFileNode(let node): return node
-    case .classNode(let node): return node
-    case .structNode(let node): return node
-    case .enumNode(let node): return node
-    case .enumCaseNode(let node): return node
-    case .extensionNode(let node): return node
-    case .funcNode(let node): return node
-    case .initialiseNode(let node): return node
-    case .closureNode(let node): return node
-    case .ifBlockNode(let node, _): return node
-    case .elseBlockNode(let node, _): return node
-    case .guardNode(let node): return node
-    case .forLoopNode(let node): return node
-    case .whileLoopNode(let node): return node
-    case .subscriptNode(let node): return node
-    case .accessorNode(let node): return node
-    case .variableDeclNode(let node): return node
-    case .switchCaseNode(let node): return node
+    case .sourceFileNode(let node): return node._syntaxNode
+    case .classNode(let node): return node._syntaxNode
+    case .structNode(let node): return node._syntaxNode
+    case .enumNode(let node): return node._syntaxNode
+    case .enumCaseNode(let node): return node._syntaxNode
+    case .extensionNode(let node): return node._syntaxNode
+    case .funcNode(let node): return node._syntaxNode
+    case .initialiseNode(let node): return node._syntaxNode
+    case .closureNode(let node): return node._syntaxNode
+    case .ifBlockNode(let node, _): return node._syntaxNode
+    case .elseBlockNode(let node, _): return node._syntaxNode
+    case .guardNode(let node): return node._syntaxNode
+    case .forLoopNode(let node): return node._syntaxNode
+    case .whileLoopNode(let node): return node._syntaxNode
+    case .subscriptNode(let node): return node._syntaxNode
+    case .accessorNode(let node): return node._syntaxNode
+    case .variableDeclNode(let node): return node._syntaxNode
+    case .switchCaseNode(let node): return node._syntaxNode
     }
   }
   
@@ -257,7 +271,7 @@ open class Scope: Hashable, CustomStringConvertible {
       // or: let x = x.doSmth()
       // Here x on the right cannot be resolved to x on the left
       if case let .binding(_, valueNode) = variable.raw,
-        valueNode != nil && node.isDescendent(of: valueNode!) {
+         valueNode != nil && node._syntaxNode.isDescendent(of: valueNode!._syntaxNode) {
         continue
       }
       
@@ -304,7 +318,7 @@ extension Scope {
   }
 }
 
-extension Syntax {
+extension SyntaxProtocol {
   public var enclosingScopeNode: ScopeNode? {
     var parent = self.parent
     while parent != nil {

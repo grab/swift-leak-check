@@ -1,0 +1,4 @@
+module _CSwiftSyntax {
+    umbrella "/Users/hoang.le/Projects/SwiftLeakCheck/.build/checkouts/swift-syntax/Sources/_CSwiftSyntax/include"
+    export *
+}

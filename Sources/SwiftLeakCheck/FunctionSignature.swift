@@ -51,6 +51,9 @@ public struct FunctionSignature {
     guard funcName == functionCallExpr.symbol?.text else {
       return .nameMismatch
     }
+    
+    print("Debug: \(functionCallExpr)")
+    
     return match((ArgumentListWrapper(functionCallExpr.argumentList), functionCallExpr.trailingClosure))
   }
   
@@ -139,14 +142,6 @@ public struct FunctionParam: Hashable {
     
     isClosure = (param.type?.isClosure == true)
     canOmit = param.defaultArgument != nil
-  }
-}
-
-private extension TypeSyntax {
-  var isClosure: Bool {
-    return wrappedType is FunctionTypeSyntax
-      || (wrappedType as? AttributedTypeSyntax)?.baseType.isClosure == true
-      || (wrappedType as? TupleTypeSyntax).flatMap { $0.elements.count == 1 && $0.elements[0].type.isClosure } == true
   }
 }
 

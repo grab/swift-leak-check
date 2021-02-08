@@ -59,7 +59,7 @@ Edit the `SwiftLeakChecker` scheme and change the `/path/to/your/swift/file/or/f
 
 The SwiftLeakChecker target is ready to be used as-is. But if you want to build your own tool, do more customisation etc.., then you can follow these steps.
 
-Note: Xcode 10.2 or later or a Swift 4.2 toolchain or later with the Swift Package Manager is required.
+Note: Xcode 11 or later or a Swift 5.2 toolchain or later with the Swift Package Manager is required.
 
 
 Add this repository to the `Package.swift` manifest of your project:
