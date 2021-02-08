@@ -60,12 +60,6 @@
             ReferencedContainer = "container:SwiftLeakCheck.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "/Users/hoang.le/Desktop/leakcheck_sample_code.swift"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
