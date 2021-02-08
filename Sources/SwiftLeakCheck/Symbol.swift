@@ -16,8 +16,8 @@ public enum Symbol: Hashable {
   
   var node: Syntax {
     switch self {
-    case .token(let node): return node
-    case .identifier(let node): return node
+    case .token(let node): return node._syntaxNode
+    case .identifier(let node): return node._syntaxNode
     }
   }
   

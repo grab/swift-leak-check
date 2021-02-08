@@ -18,7 +18,7 @@ open class BaseNonEscapeRule: NonEscapeRule {
   public init() {}
   
   public func isNonEscape(closureNode: ExprSyntax, graph: Graph) -> Bool {
-    guard let (funcCallExpr, arg) = closureNode.getEnclosingFunctionCallForArgument() else {
+    guard let (funcCallExpr, arg) = closureNode.getEnclosingFunctionCallExpression() else {
       return false
     }
     

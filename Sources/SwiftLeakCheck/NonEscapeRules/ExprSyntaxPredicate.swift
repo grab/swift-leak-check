@@ -27,7 +27,7 @@ extension ExprSyntaxPredicate {
   
   public static func name(_ namePredicate: @escaping (String) -> Bool) -> ExprSyntaxPredicate {
     return .init({ expr -> Bool in
-      guard let identifierExpr = expr as? IdentifierExprSyntax else {
+      guard let identifierExpr = expr?.as(IdentifierExprSyntax.self) else {
         return false
       }
       return namePredicate(identifierExpr.identifier.text)
@@ -63,7 +63,7 @@ extension ExprSyntaxPredicate {
   
   public static func funcCall(predicate: @escaping (FunctionCallExprSyntax) -> Bool) -> ExprSyntaxPredicate {
     return .init({ expr -> Bool in
-      guard let funcCallExpr = expr as? FunctionCallExprSyntax else {
+      guard let funcCallExpr = expr?.as(FunctionCallExprSyntax.self) else {
         return false
       }
       return predicate(funcCallExpr)
@@ -76,7 +76,7 @@ extension ExprSyntaxPredicate {
   public static func memberAccess(_ memberPredicate: @escaping (String) -> Bool,
                                   base basePredicate: ExprSyntaxPredicate) -> ExprSyntaxPredicate {
     return .init({ expr -> Bool in
-      guard let memberAccessExpr = expr as? MemberAccessExprSyntax else {
+      guard let memberAccessExpr = expr?.as(MemberAccessExprSyntax.self) else {
         return false
       }
       return memberPredicate(memberAccessExpr.name.text)
@@ -93,5 +93,12 @@ public extension ExprSyntax {
   
   func match(_ predicate: ExprSyntaxPredicate) -> Bool {
     return predicate.match(self)
+  }
+}
+
+// Convenient
+public extension FunctionCallExprSyntax {
+  func match(_ predicate: ExprSyntaxPredicate) -> Bool {
+    return predicate.match(ExprSyntax(self))
   }
 }

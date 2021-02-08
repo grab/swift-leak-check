@@ -119,7 +119,7 @@ extension GraphImpl {
   
   func scope(for scopeNode: ScopeNode) -> Scope {
     guard let result = mapScopeNodeToScope[scopeNode] else {
-      fatalError("Can't find the scope of node at \(scopeNode.node.position.prettyDescription)")
+      fatalError("Can't find the scope of node \(scopeNode)")
     }
     return result
   }
@@ -128,7 +128,7 @@ extension GraphImpl {
     let scope = enclosingScope(for: symbol.node)
     // Special case when node is a closure capture item, ie `{ [weak self] in`
     // We need to examine node wrt closure's parent
-    if symbol.node.parent is ClosureCaptureItemSyntax {
+    if symbol.node.parent?.is(ClosureCaptureItemSyntax.self) == true {
       if let parentScope = scope.parent {
         return parentScope
       } else {
@@ -136,11 +136,11 @@ extension GraphImpl {
       }
     }
     
-    if symbol.node.hasAncestor({ $0 is InheritedTypeSyntax }) {
+    if symbol.node.hasAncestor({ $0.is(InheritedTypeSyntax.self) }) {
       return scope.parent
     }
     
-    if symbol.node.hasAncestor({ $0 is ExtensionDeclSyntax && symbol.node.isDescendent(of: ($0 as! ExtensionDeclSyntax).extendedType)}) {
+    if symbol.node.hasAncestor({ $0.is(ExtensionDeclSyntax.self) && symbol.node.isDescendent(of: $0.as(ExtensionDeclSyntax.self)!.extendedType._syntaxNode) }) {
       return scope.parent
     }
     
@@ -245,7 +245,7 @@ extension GraphImpl {
       return false
     }
     
-    if let identifierNode = node as? IdentifierExprSyntax {
+    if let identifierNode = node.as(IdentifierExprSyntax.self) {
       guard let variable = resolveVariable(identifierNode) else {
         return identifierNode.identifier.text == "self"
       }
@@ -254,7 +254,7 @@ extension GraphImpl {
       case .param:
         return false
       case let .capture(capturedNode):
-        return couldReferenceSelf(capturedNode)
+        return couldReferenceSelf(ExprSyntax(capturedNode))
       case let .binding(_, valueNode):
         if let valueNode = valueNode {
           return couldReferenceSelf(valueNode)
@@ -270,10 +270,11 @@ extension GraphImpl {
 // MARK: - Function resolve
 extension GraphImpl {
   func resolveFunction(_ funcCallExpr: FunctionCallExprSyntax) -> (Function, Function.MatchResult.MappingInfo)? {
-    switch funcCallExpr.calledExpression {
-    case let identifier as IdentifierExprSyntax: // doSmth(...) or A(...)
+    if let identifier = funcCallExpr.calledExpression.as(IdentifierExprSyntax.self) { // doSmth(...) or A(...)
       return _findFunction(symbol: .identifier(identifier), funcCallExpr: funcCallExpr)
-    case let memberAccessExpr as MemberAccessExprSyntax: // a.doSmth(...)
+    }
+    
+    if let memberAccessExpr = funcCallExpr.calledExpression.as(MemberAccessExprSyntax.self) { // a.doSmth(...) or .doSmth(...)
       if let base = memberAccessExpr.base {
         if couldReferenceSelf(base) {
           return _findFunction(symbol: .token(memberAccessExpr.name), funcCallExpr: funcCallExpr)
@@ -285,15 +286,15 @@ extension GraphImpl {
         // For eg, we can say: let s: String = .init(...)
         return nil
       }
-      
-    case is ImplicitMemberExprSyntax, // .create { ... }
-         is OptionalChainingExprSyntax: // optional closure
+    }
+    
+    if funcCallExpr.calledExpression.is(OptionalChainingExprSyntax.self) {
       // TODO
       return nil
-    default:
-      // Unhandled case
-      return nil
     }
+    
+    // Unhandled case
+    return nil
   }
   
   // TODO: Currently we only resolve to `func`. This could resole to `closure` as well
@@ -306,7 +307,7 @@ extension GraphImpl {
       case .variable, .typeDecl: // This could be due to cache
         return false
       case .function(let function):
-        let mustStop = enclosingScope(for: function).type.isTypeDecl
+        let mustStop = enclosingScope(for: function._syntaxNode).type.isTypeDecl
         
         switch function.match(funcCallExpr) {
         case .argumentMismatch,
@@ -359,56 +360,56 @@ extension GraphImpl {
   }
   
   func resolveExprType(_ expr: ExprSyntax) -> TypeResolve {
-    if let optionalExpr = expr as? OptionalChainingExprSyntax {
+    if let optionalExpr = expr.as(OptionalChainingExprSyntax.self) {
       return .optional(base: resolveExprType(optionalExpr.expression))
     }
     
-    if let identifierExpr = expr as? IdentifierExprSyntax {
+    if let identifierExpr = expr.as(IdentifierExprSyntax.self) {
       if let variable = resolveVariable(identifierExpr) {
         return resolveVariableType(variable)
       }
       if identifierExpr.identifier.text == "self" {
-        return enclosingTypeDecl(for: expr).flatMap { .type($0) } ?? .unknown
+        return enclosingTypeDecl(for: expr._syntaxNode).flatMap { .type($0) } ?? .unknown
       }
       // May be global variable, or type like Int, String,...
       return .unknown
     }
     
-//    if let memberAccessExpr = node as? MemberAccessExprSyntax {
+//    if let memberAccessExpr = node.as(MemberAccessExprSyntax.self) {
 //      guard let base = memberAccessExpr.base else {
 //        fatalError("Is it possible that `base` is nil ?")
 //      }
 //
 //    }
     
-    if let functionCallExpr = expr as? FunctionCallExprSyntax {
+    if let functionCallExpr = expr.as(FunctionCallExprSyntax.self) {
       let result = cachedFunCallExprType[functionCallExpr] ?? _resolveFunctionCallType(functionCallExpr: functionCallExpr)
       cachedFunCallExprType[functionCallExpr] = result
       return result
     }
     
-    if let arrayExpr = expr as? ArrayExprSyntax {
+    if let arrayExpr = expr.as(ArrayExprSyntax.self) {
       return .sequence(elementType: resolveExprType(arrayExpr.elements[0].expression))
     }
     
-    if expr is DictionaryExprSyntax {
+    if expr.is(DictionaryExprSyntax.self) {
       return .dict
     }
     
-    if expr is IntegerLiteralExprSyntax {
+    if expr.is(IntegerLiteralExprSyntax.self) {
       return _getAllExtensions(name: ["Int"]).first.flatMap { .type($0) } ?? .name(["Int"])
     }
-    if expr is StringLiteralExprSyntax {
+    if expr.is(StringLiteralExprSyntax.self) {
       return _getAllExtensions(name: ["String"]).first.flatMap { .type($0) } ?? .name(["String"])
     }
-    if expr is FloatLiteralExprSyntax {
+    if expr.is(FloatLiteralExprSyntax.self) {
       return _getAllExtensions(name: ["Float"]).first.flatMap { .type($0) } ?? .name(["Float"])
     }
-    if expr is BooleanLiteralExprSyntax {
+    if expr.is(BooleanLiteralExprSyntax.self) {
       return _getAllExtensions(name: ["Bool"]).first.flatMap { .type($0) } ?? .name(["Bool"])
     }
     
-    if let tupleExpr = expr as? TupleExprSyntax {
+    if let tupleExpr = expr.as(TupleExprSyntax.self) {
       if tupleExpr.elementList.count == 1, let range = tupleExpr.elementList[0].expression.rangeInfo {
         if let leftType = range.left.flatMap({ resolveExprType($0) })?.toNilIfUnknown {
           return .sequence(elementType: leftType)
@@ -422,7 +423,7 @@ extension GraphImpl {
       return .tuple(tupleExpr.elementList.map { resolveExprType($0.expression) })
     }
     
-    if let subscriptExpr = expr as? SubscriptExprSyntax {
+    if let subscriptExpr = expr.as(SubscriptExprSyntax.self) {
       let sequenceElementType = resolveExprType(subscriptExpr.calledExpression).sequenceElementType
       if sequenceElementType != .unknown {
         if subscriptExpr.argumentList.count == 1, let argument = subscriptExpr.argumentList.first?.expression {
@@ -449,10 +450,10 @@ extension GraphImpl {
       return resolveExprType(expr)
     case .inferedFromClosure(let closureExpr, let paramIndex, let paramCount):
       // let x: (X, Y) -> Z = { a,b in ...}
-      if let closureVariable = enclosingScope(for: closureExpr).getVariableBindingTo(expr: closureExpr) {
+      if let closureVariable = enclosingScope(for: Syntax(closureExpr)).getVariableBindingTo(expr: ExprSyntax(closureExpr)) {
         switch closureVariable.typeInfo {
         case .exact(let type):
-          guard let argumentsType = (type as? FunctionTypeSyntax)?.arguments else {
+          guard let argumentsType = (type.as(FunctionTypeSyntax.self))?.arguments else {
             // Eg: let onFetchJobs: JobCardsFetcher.OnFetchJobs = { [weak self] jobs in ... }
             return .unknown
           }
@@ -486,21 +487,24 @@ extension GraphImpl {
       return .optional(base: resolveType(type.wrappedType))
     }
     
-    switch type {
-    case let arrayType as ArrayTypeSyntax:
+    if let arrayType = type.as(ArrayTypeSyntax.self) {
       return .sequence(elementType: resolveType(arrayType.elementType))
-    case is DictionaryTypeSyntax:
+    }
+    
+    if type.is(DictionaryTypeSyntax.self) {
       return .dict
-    case let tupleType as TupleTypeSyntax:
+    }
+    
+    if let tupleType = type.as(TupleTypeSyntax.self) {
       return .tuple(tupleType.elements.map { resolveType($0.type) })
-    default:
-      if let tokens = type.tokens, let typeDecl = resolveTypeDecl(tokens: tokens) {
-        return .type(typeDecl)
-      } else if let name = type.name {
-        return .name(name)
-      } else {
-        return .unknown
-      }
+    }
+    
+    if let tokens = type.tokens, let typeDecl = resolveTypeDecl(tokens: tokens) {
+      return .type(typeDecl)
+    } else if let name = type.name {
+      return .name(name)
+    } else {
+      return .unknown
     }
   }
   
@@ -516,7 +520,7 @@ extension GraphImpl {
     
     var calledExpr = functionCallExpr.calledExpression
     
-    if let optionalExpr = calledExpr as? OptionalChainingExprSyntax { // Must be optional closure
+    if let optionalExpr = calledExpr.as(OptionalChainingExprSyntax.self) { // Must be optional closure
       if !ignoreOptional {
         return .optional(base: _resolveFunctionCallType(functionCallExpr: functionCallExpr, ignoreOptional: true))
       } else {
@@ -525,8 +529,8 @@ extension GraphImpl {
     }
     
     // [X]()
-    if let arrayExpr = calledExpr as? ArrayExprSyntax {
-      if let typeIdentifier = arrayExpr.elements[0].expression as? IdentifierPatternSyntax {
+    if let arrayExpr = calledExpr.as(ArrayExprSyntax.self) {
+      if let typeIdentifier = arrayExpr.elements[0].expression.as(IdentifierExprSyntax.self) {
         if let typeDecl = resolveTypeDecl(tokens: [typeIdentifier.identifier]) {
           return .sequence(elementType: .type(typeDecl))
         } else {
@@ -538,12 +542,12 @@ extension GraphImpl {
     }
     
     // [X: Y]()
-    if calledExpr is DictionaryExprSyntax {
+    if calledExpr.is(DictionaryExprSyntax.self) {
       return .dict
     }
     
     // doSmth() or A()
-    if let identifierExpr = calledExpr as? IdentifierExprSyntax {
+    if let identifierExpr = calledExpr.as(IdentifierExprSyntax.self) {
       let identifierResolve = _findSymbol(.identifier(identifierExpr)) { resolve in
         switch resolve {
         case .function(let function):
@@ -570,7 +574,7 @@ extension GraphImpl {
     }
     
     // x.y()
-    if let memberAccessExpr = calledExpr as? MemberAccessExprSyntax {
+    if let memberAccessExpr = calledExpr.as(MemberAccessExprSyntax.self) {
       if let base = memberAccessExpr.base {
         let baseType = resolveExprType(base)
         if _isCollection(baseType) {
@@ -700,7 +704,7 @@ extension GraphImpl {
   func isClosureEscape(_ closure: ClosureExprSyntax, nonEscapeRules: [NonEscapeRule]) -> Bool {
     func _isClosureEscape(_ expr: ExprSyntax, isFuncParam: Bool) -> Bool {
       // check cache
-      if let closureNode = expr as? ClosureExprSyntax, let cachedResult = cachedClosureEscapeCheck[closureNode] {
+      if let closureNode = expr.as(ClosureExprSyntax.self), let cachedResult = cachedClosureEscapeCheck[closureNode] {
         return cachedResult
       }
       
@@ -713,7 +717,7 @@ extension GraphImpl {
       // }
       // Here block is a param and it's used inside an escaping closure
       if isFuncParam {
-        if let parentClosure = expr.enclosingtClosureNode {
+        if let parentClosure = expr.getEnclosingClosureNode() {
           if isClosureEscape(parentClosure, nonEscapeRules: nonEscapeRules) {
             return true
           }
@@ -727,17 +731,17 @@ extension GraphImpl {
       
       // let x = closure
       // `x` may be used anywhere
-      if let variable = enclosingScope(for: expr).getVariableBindingTo(expr: expr) {
+      if let variable = enclosingScope(for: expr._syntaxNode).getVariableBindingTo(expr: expr) {
         let references = getVariableReferences(variable: variable)
         for reference in references {
-          if _isClosureEscape(reference, isFuncParam: isFuncParam) == true {
+          if _isClosureEscape(ExprSyntax(reference), isFuncParam: isFuncParam) == true {
             return true // Escape
           }
         }
       }
       
       // Used as argument in function call: doSmth(a, b, c: {...}) or doSmth(a, b) {...}
-      if let (functionCall, argument) = expr.getEnclosingFunctionCallForArgument() {
+      if let (functionCall, argument) = expr.getEnclosingFunctionCallExpression() {
         if let (function, matchedInfo) = resolveFunction(functionCall) {
           let param: FunctionParameterSyntax!
           if let argument = argument {
@@ -755,7 +759,7 @@ extension GraphImpl {
           }
           
           // get the `.function` scope where we define this func
-          let scope = self.scope(for: function)
+          let scope = self.scope(for: function._syntaxNode)
           assert(scope.type.isFunction)
           
           guard let variableForParam = scope.variables.first(where: { $0.raw.token == (param.secondName ?? param.firstName) }) else {
@@ -763,7 +767,7 @@ extension GraphImpl {
           }
           let references = getVariableReferences(variable: variableForParam)
           for referennce in references {
-            if _isClosureEscape(referennce, isFuncParam: true) == true {
+            if _isClosureEscape(ExprSyntax(referennce), isFuncParam: true) == true {
               return true
             }
           }
@@ -785,7 +789,7 @@ extension GraphImpl {
       return false // It's unlikely the closure is escaping
     }
     
-    let result = _isClosureEscape(closure, isFuncParam: false)
+    let result = _isClosureEscape(ExprSyntax(closure), isFuncParam: false)
     cachedClosureEscapeCheck[closure] = result
     return result
   }

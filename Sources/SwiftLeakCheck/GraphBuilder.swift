@@ -13,18 +13,19 @@ import SwiftSyntax
 final class GraphBuilder {
   static func buildGraph(node: SourceFileSyntax) -> GraphImpl {
     // First round: build the graph
-    let vistor = GraphBuilderVistor()
-    node.walk(vistor)
-    let graph = GraphImpl(sourceFileScope: vistor.sourceFileScope)
+    let visitor = GraphBuilderVistor()
+    visitor.walk(node)
+    
+    let graph = GraphImpl(sourceFileScope: visitor.sourceFileScope)
     
     // Second round: resolve the references
-    node.walk(ReferenceBuilderVisitor(graph: graph))
+    ReferenceBuilderVisitor(graph: graph).walk(node)
     
     return graph
   }
 }
 
-class BaseGraphVistor: SyntaxVisitor {
+class BaseGraphVistor: SyntaxAnyVisitor {
   override func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
     return .skipChildren
   }
@@ -50,7 +51,7 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   fileprivate var sourceFileScope: SourceFileScope!
   private var stack = Stack<Scope>()
   
-  override func visitPre(_ node: Syntax) {
+  override func visitAny(_ node: Syntax) -> SyntaxVisitorContinueKind {
     if let scopeNode = ScopeNode.from(node: node) {
       if case let .sourceFileNode(node) = scopeNode {
         assert(stack.peek() == nil)
@@ -63,28 +64,32 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
     }
     
     #if DEBUG
-    if node is ElseBlockSyntax || node is ElseIfContinuationSyntax {
+    if node.is(ElseBlockSyntax.self) || node.is(ElseIfContinuationSyntax.self) {
       assertionFailure("Unhandled case")
     }
     #endif
     
-    super.visitPre(node)
+    
+    return super.visitAny(node)
   }
   
-  override func visitPost(_ node: Syntax) {
+  override func visitAnyPost(_ node: Syntax) {
     if let scopeNode = ScopeNode.from(node: node) {
       assert(stack.peek()?.scopeNode == scopeNode)
       stack.pop()
     }
-    super.visitPost(node)
+    super.visitAnyPost(node)
   }
   
   // Note: this is not necessarily in a func x(param...)
   // Take this example:
   //  x.block { param in ... }
-  // Swift treats `param` as ClosureParamSyntax, but if we put `param` in open and close parathenses,
+  // Swift treats `param` as ClosureParamSyntax , but if we put `param` in open and close parathenses,
   // Swift will treat it as FunctionParameterSyntax
   override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
+    
+    _ = super.visit(node)
+    
     guard let scope = stack.peek(), scope.type.isFunction || scope.type == .enumCaseNode else {
       fatalError()
     }
@@ -101,11 +106,10 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
     return .visitChildren
   }
   
-  override func visit(_ node: AccessorParameterSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-  
   override func visit(_ node: ClosureCaptureItemSyntax) -> SyntaxVisitorContinueKind {
+    
+    _ = super.visit(node)
+    
     guard let scope = stack.peek(), scope.isClosure else {
       fatalError()
     }
@@ -115,6 +119,9 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
   
   override func visit(_ node: ClosureParamSyntax) -> SyntaxVisitorContinueKind {
+    
+    _ = super.visit(node)
+    
     guard let scope = stack.peek(), scope.isClosure else {
       fatalError("A closure should be found for a ClosureParam node. Stack may have been corrupted")
     }
@@ -123,6 +130,9 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
   
   override func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
+    
+    _ = super.visit(node)
+    
     guard let scope = stack.peek() else {
       fatalError()
     }
@@ -135,6 +145,9 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
   
   override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
+    
+    _ = super.visit(node)
+    
     guard let scope = stack.peek() else {
       fatalError()
     }
@@ -149,6 +162,9 @@ fileprivate final class GraphBuilderVistor: BaseGraphVistor {
   }
   
   override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
+    
+    _ = super.visit(node)
+    
     guard let scope = stack.peek(), scope.type == .forLoopNode else {
       fatalError()
     }

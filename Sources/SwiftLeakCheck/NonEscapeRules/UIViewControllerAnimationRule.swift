@@ -96,7 +96,7 @@ open class UIViewControllerAnimationRule: BaseNonEscapeRule {
       //   }
       // }
       // In this case, we find the TypeDecl where this func is called from (Eg, SomeClass)
-      if let typeDecl = graph.enclosingTypeDecl(for: funcCallExpr) {
+      if let typeDecl = graph.enclosingTypeDecl(for: funcCallExpr._syntaxNode) {
         return isUIViewControllerType(typeDecl: typeDecl)
       } else {
         return false
