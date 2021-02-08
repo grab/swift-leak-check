@@ -55,7 +55,7 @@
 		OBJ_128 /* SwiftSyntax+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* SwiftSyntax+Extensions.swift */; };
 		OBJ_129 /* Symbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* Symbol.swift */; };
 		OBJ_130 /* SyntaxRetrieval.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* SyntaxRetrieval.swift */; };
-		OBJ_131 /* Tmp.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* Tmp.swift */; };
+		OBJ_131 /* BackwardCompatiblity.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* BackwardCompatiblity.swift */; };
 		OBJ_132 /* TypeDecl.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* TypeDecl.swift */; };
 		OBJ_133 /* TypeResolve.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* TypeResolve.swift */; };
 		OBJ_134 /* Utility.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* Utility.swift */; };
@@ -228,7 +228,7 @@
 		OBJ_28 /* SwiftSyntax+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SwiftSyntax+Extensions.swift"; sourceTree = "<group>"; };
 		OBJ_29 /* Symbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Symbol.swift; sourceTree = "<group>"; };
 		OBJ_30 /* SyntaxRetrieval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxRetrieval.swift; sourceTree = "<group>"; };
-		OBJ_31 /* Tmp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tmp.swift; sourceTree = "<group>"; };
+		OBJ_31 /* BackwardCompatiblity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackwardCompatiblity.swift; sourceTree = "<group>"; };
 		OBJ_32 /* TypeDecl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeDecl.swift; sourceTree = "<group>"; };
 		OBJ_33 /* TypeResolve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeResolve.swift; sourceTree = "<group>"; };
 		OBJ_34 /* Utility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utility.swift; sourceTree = "<group>"; };
@@ -438,7 +438,7 @@
 			path = ".build/checkouts/swift-syntax/Sources/SwiftSyntax";
 			sourceTree = SOURCE_ROOT;
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -451,7 +451,6 @@
 				OBJ_103 /* LICENSE */,
 				OBJ_104 /* README.md */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_65 /* gyb_generated */ = {
@@ -488,6 +487,7 @@
 		OBJ_8 /* SwiftLeakCheck */ = {
 			isa = PBXGroup;
 			children = (
+				OBJ_18 /* NonEscapeRules */,
 				OBJ_9 /* BaseSyntaxTreeLeakDetector.swift */,
 				OBJ_10 /* DirectoryScanner.swift */,
 				OBJ_11 /* Function.swift */,
@@ -497,14 +497,13 @@
 				OBJ_15 /* GraphLeakDetector.swift */,
 				OBJ_16 /* Leak.swift */,
 				OBJ_17 /* LeakDetector.swift */,
-				OBJ_18 /* NonEscapeRules */,
 				OBJ_25 /* Scope.swift */,
 				OBJ_26 /* SourceFileScope.swift */,
 				OBJ_27 /* Stack.swift */,
 				OBJ_28 /* SwiftSyntax+Extensions.swift */,
 				OBJ_29 /* Symbol.swift */,
 				OBJ_30 /* SyntaxRetrieval.swift */,
-				OBJ_31 /* Tmp.swift */,
+				OBJ_31 /* BackwardCompatiblity.swift */,
 				OBJ_32 /* TypeDecl.swift */,
 				OBJ_33 /* TypeResolve.swift */,
 				OBJ_34 /* Utility.swift */,
@@ -711,7 +710,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_95 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -777,7 +776,7 @@
 				OBJ_128 /* SwiftSyntax+Extensions.swift in Sources */,
 				OBJ_129 /* Symbol.swift in Sources */,
 				OBJ_130 /* SyntaxRetrieval.swift in Sources */,
-				OBJ_131 /* Tmp.swift in Sources */,
+				OBJ_131 /* BackwardCompatiblity.swift in Sources */,
 				OBJ_132 /* TypeDecl.swift in Sources */,
 				OBJ_133 /* TypeResolve.swift in Sources */,
 				OBJ_134 /* Utility.swift in Sources */,

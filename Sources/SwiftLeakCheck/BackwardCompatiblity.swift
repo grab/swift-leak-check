@@ -7,6 +7,6 @@
 
 import SwiftSyntax
 
-// For backward-compatible with Swift 4.2 type names
+// For backward-compatible with Swift compiler 4.2 type names
 public typealias FunctionCallArgumentListSyntax = TupleExprElementListSyntax
 public typealias FunctionCallArgumentSyntax = TupleExprElementSyntax
