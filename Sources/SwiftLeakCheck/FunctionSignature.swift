@@ -52,8 +52,6 @@ public struct FunctionSignature {
       return .nameMismatch
     }
     
-    print("Debug: \(functionCallExpr)")
-    
     return match((ArgumentListWrapper(functionCallExpr.argumentList), functionCallExpr.trailingClosure))
   }
   
